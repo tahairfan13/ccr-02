@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,16 +60,18 @@ export default function Step5Contact({
 
       if (!response.ok) {
         const error = await response.json();
-        alert(error.error || "Email validation failed. Please check your email address.");
+        toast.error(error.error || "Email validation failed. Please check your email address.");
         return;
       }
 
       // Email is valid, mark as verified (no code needed for bounce check)
       onVerificationChange("emailVerified", true);
-      alert("Email validated successfully!");
+      toast.success("Email validated successfully!", {
+        description: "Your email address has been verified.",
+      });
     } catch (error) {
       console.error("Error validating email:", error);
-      alert("Failed to validate email. Please try again.");
+      toast.error("Failed to validate email. Please try again.");
     } finally {
       setEmailLoading(false);
     }
@@ -87,15 +90,17 @@ export default function Step5Contact({
 
       if (!response.ok) {
         const error = await response.json();
-        alert(error.error || "Failed to send verification code. Please check your phone number.");
+        toast.error(error.error || "Failed to send verification code. Please check your phone number.");
         return;
       }
 
       setPhoneCodeSent(true);
-      alert("Verification code sent to your phone!");
+      toast.success("Verification code sent!", {
+        description: "Check your phone for a 6-digit code.",
+      });
     } catch (error) {
       console.error("Error sending phone code:", error);
-      alert("Failed to send verification code. Please try again.");
+      toast.error("Failed to send verification code. Please try again.");
     } finally {
       setPhoneLoading(false);
     }
@@ -114,15 +119,17 @@ export default function Step5Contact({
 
       if (!response.ok) {
         const error = await response.json();
-        alert(error.error || "Invalid verification code");
+        toast.error(error.error || "Invalid verification code");
         return;
       }
 
       onVerificationChange("phoneVerified", true);
-      alert("Phone number verified successfully!");
+      toast.success("Phone verified successfully!", {
+        description: "Your phone number has been confirmed.",
+      });
     } catch (error) {
       console.error("Error verifying phone code:", error);
-      alert("Failed to verify code. Please try again.");
+      toast.error("Failed to verify code. Please try again.");
     } finally {
       setPhoneLoading(false);
     }
@@ -198,7 +205,7 @@ export default function Step5Contact({
                   <Button
                     onClick={handleSendEmailCode}
                     disabled={!isEmailValid || emailLoading}
-                    className="flex-shrink-0 bg-[#0094ED] hover:bg-[#0070bd]"
+                    className="flex-shrink-0 bg-[#ed1a3b] hover:bg-[#d11632]"
                   >
                     {emailLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -242,7 +249,7 @@ export default function Step5Contact({
                   <Button
                     onClick={handleSendPhoneCode}
                     disabled={!isPhoneValid || phoneLoading || phoneCodeSent}
-                    className="flex-shrink-0 bg-[#0094ED] hover:bg-[#0070bd]"
+                    className="flex-shrink-0 bg-[#ed1a3b] hover:bg-[#d11632]"
                   >
                     {phoneLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -331,12 +338,15 @@ export default function Step5Contact({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="mt-5 p-4 rounded-lg bg-blue-50 border border-blue-200"
+          className="mt-5 p-5 rounded-lg bg-blue-50 border border-blue-200 space-y-2"
         >
-          <p className="text-sm text-gray-600 text-center flex items-center justify-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-[#0094ED]" strokeWidth={2} />
-            <span>Your information is secure and will only be used to send you the project estimate</span>
-          </p>
+          <div className="flex items-start justify-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-[#0094ED] mt-0.5 flex-shrink-0" strokeWidth={2} />
+            <div className="text-sm text-gray-600 text-center">
+              <p className="font-semibold text-gray-900 mb-1">Your information is secure</p>
+              <p>Your details will only be used to send you the project estimate and our sales team will reach out to discuss your requirements.</p>
+            </div>
+          </div>
         </motion.div>
       </motion.div>
     </div>

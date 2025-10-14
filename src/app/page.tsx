@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProgressIndicator from "@/components/ProgressIndicator";
@@ -139,10 +140,15 @@ export default function Home() {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      alert("Thank you! Your cost estimate has been sent to your email.");
+      toast.success("Estimate submitted successfully!", {
+        description: "Your detailed cost estimate has been sent to your email.",
+        duration: 5000,
+      });
     } catch (error) {
       console.error("Error submitting form:", error);
-      alert("There was an error submitting your request. Please try again.");
+      toast.error("Submission failed", {
+        description: "There was an error submitting your request. Please try again.",
+      });
     } finally {
       setIsSubmitting(false);
     }
