@@ -135,13 +135,6 @@ export default function Step1ApplicationType({
                       </p>
                     </div>
                   </div>
-
-                  {/* Selection Indicator at Bottom */}
-                  <div className="pt-4 border-t border-gray-100 text-center">
-                    <span className={`text-xs font-semibold ${isSelected ? "text-[#ed1a3b]" : "text-gray-500"}`}>
-                      {isSelected ? "✓ Selected" : "Click to select"}
-                    </span>
-                  </div>
                 </div>
               </Card>
             </motion.div>

@@ -141,15 +141,8 @@ export default function Step2ProjectScale({
                     </div>
                   </div>
 
-                  {/* Timeline */}
-                  <div className="mb-5 px-3 py-1.5 rounded-md bg-[#0094ED] bg-opacity-10 w-fit">
-                    <span className="text-xs font-semibold text-[#0094ED]">
-                      Timeline: {option.timeline}
-                    </span>
-                  </div>
-
                   {/* Features list */}
-                  <div className="flex-grow">
+                  <div className="flex-grow mt-4">
                     <ul className="space-y-3">
                       {option.features.map((feature, idx) => (
                         <motion.li
