@@ -1,103 +1,263 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { motion } from "framer-motion";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import ProgressIndicator from "@/components/ProgressIndicator";
+import Step1ApplicationType from "@/components/steps/Step1ApplicationType";
+import Step2ProjectScale from "@/components/steps/Step2ProjectScale";
+import Step3Description from "@/components/steps/Step3Description";
+import Step4Features from "@/components/steps/Step4Features";
+import Step5Contact from "@/components/steps/Step5Contact";
+import { Button } from "@/components/ui/button";
+import { useFormState } from "@/hooks/useFormState";
+import { ArrowRight, ArrowLeft, Send, Loader2 } from "lucide-react";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const {
+    currentStep,
+    formData,
+    updateApplicationTypes,
+    updateProjectScale,
+    updateDescription,
+    updateFeatures,
+    toggleFeature,
+    updateContactInfo,
+    updateVerificationStatus,
+    nextStep,
+    prevStep,
+  } = useFormState();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const [isGeneratingFeatures, setIsGeneratingFeatures] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const canProceed = () => {
+    switch (currentStep) {
+      case 1:
+        return formData.applicationTypes.length > 0;
+      case 2:
+        return formData.projectScale !== null;
+      case 3:
+        const wordCount = formData.description.trim().split(/\s+/).filter(Boolean).length;
+        return wordCount >= 20;
+      case 4:
+        return formData.features.some((f) => f.selected);
+      case 5:
+        return (
+          formData.name.trim().length > 0 &&
+          formData.emailVerified &&
+          formData.phoneVerified
+        );
+      default:
+        return false;
+    }
+  };
+
+  const handleNext = async () => {
+    if (currentStep === 3 && formData.features.length === 0) {
+      // Generate features after step 3
+      await generateFeatures();
+    }
+    nextStep();
+  };
+
+  const generateFeatures = async () => {
+    setIsGeneratingFeatures(true);
+
+    try {
+      const response = await fetch("/api/generate-features", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          applicationTypes: formData.applicationTypes,
+          projectScale: formData.projectScale,
+          description: formData.description,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to generate features");
+      }
+
+      const data = await response.json();
+      updateFeatures(data.features);
+    } catch (error) {
+      console.error("Error generating features:", error);
+      // Fallback to example features on error
+      updateFeatures([
+        {
+          id: "1",
+          name: "User Authentication",
+          description: "Secure login and registration system with email verification",
+          hours: 40,
+          category: "Authentication",
+          selected: true,
+        },
+        {
+          id: "2",
+          name: "Dashboard",
+          description: "Main user dashboard with analytics and key metrics",
+          hours: 60,
+          category: "Core Features",
+          selected: true,
+        },
+      ]);
+    } finally {
+      setIsGeneratingFeatures(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!canProceed()) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const selectedFeatures = formData.features.filter((f) => f.selected);
+      const totalHours = selectedFeatures.reduce((sum, f) => sum + f.hours, 0);
+
+      const payload = {
+        applicationTypes: formData.applicationTypes,
+        projectScale: formData.projectScale,
+        description: formData.description,
+        features: selectedFeatures,
+        totalHours,
+        estimatedCost: totalHours * 50,
+        contact: {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+        },
+      };
+
+      // TODO: Replace with your actual endpoint
+      console.log("Submitting data:", payload);
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      alert("Thank you! Your cost estimate has been sent to your email.");
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      alert("There was an error submitting your request. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <Header />
+
+      <main className="pb-20 flex-grow">
+        <ProgressIndicator currentStep={currentStep} />
+
+        <div className="mt-8 mb-12">
+          {currentStep === 1 && (
+            <Step1ApplicationType
+              selectedTypes={formData.applicationTypes}
+              onSelectType={updateApplicationTypes}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          )}
+
+          {currentStep === 2 && (
+            <Step2ProjectScale
+              selectedScale={formData.projectScale}
+              onSelectScale={updateProjectScale}
+            />
+          )}
+
+          {currentStep === 3 && (
+            <Step3Description
+              description={formData.description}
+              onDescriptionChange={updateDescription}
+            />
+          )}
+
+          {currentStep === 4 && (
+            <Step4Features
+              features={formData.features}
+              onToggleFeature={toggleFeature}
+              isLoading={isGeneratingFeatures}
+            />
+          )}
+
+          {currentStep === 5 && (
+            <Step5Contact
+              name={formData.name}
+              email={formData.email}
+              phone={formData.phone}
+              emailVerified={formData.emailVerified}
+              phoneVerified={formData.phoneVerified}
+              onContactChange={updateContactInfo}
+              onVerificationChange={updateVerificationStatus}
+            />
+          )}
         </div>
+
+        {/* Navigation Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-4xl mx-auto px-4 flex items-center justify-between gap-3 md:gap-4 mb-8"
+        >
+          <Button
+            variant="outline"
+            onClick={prevStep}
+            disabled={currentStep === 1 || isGeneratingFeatures || isSubmitting}
+            className="flex items-center gap-2 px-5 py-2.5 md:px-6 md:py-3 text-sm md:text-base font-semibold border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" strokeWidth={2} />
+            <span className="hidden sm:inline">Back</span>
+          </Button>
+
+          {currentStep < 5 ? (
+            <Button
+              onClick={handleNext}
+              disabled={!canProceed() || isGeneratingFeatures}
+              className="flex items-center gap-2 px-6 py-2.5 md:px-8 md:py-3 text-sm md:text-base font-semibold bg-[#ed1a3b] hover:bg-[#d11632] text-white transition-all rounded-lg shadow-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#ed1a3b]"
+            >
+              {isGeneratingFeatures ? (
+                <>
+                  <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" strokeWidth={2} />
+                  <span className="hidden sm:inline">AI Analyzing...</span>
+                  <span className="sm:hidden">Loading...</span>
+                </>
+              ) : (
+                <>
+                  <span>Continue</span>
+                  <ArrowRight className="w-4 h-4 md:w-5 md:h-5" strokeWidth={2} />
+                </>
+              )}
+            </Button>
+          ) : (
+            <Button
+              onClick={handleSubmit}
+              disabled={!canProceed() || isSubmitting}
+              className="flex items-center gap-2 px-6 py-2.5 md:px-8 md:py-3 text-sm md:text-base font-semibold bg-[#ed1a3b] hover:bg-[#d11632] text-white transition-all rounded-lg shadow-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#ed1a3b]"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" strokeWidth={2} />
+                  <span className="hidden sm:inline">Submitting...</span>
+                  <span className="sm:hidden">Sending...</span>
+                </>
+              ) : (
+                <>
+                  <span className="hidden sm:inline">Get Estimate</span>
+                  <span className="sm:inline hidden sm:hidden">Submit</span>
+                  <Send className="w-4 h-4 md:w-5 md:h-5" strokeWidth={2} />
+                </>
+              )}
+            </Button>
+          )}
+        </motion.div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+      <Footer />
     </div>
   );
 }
