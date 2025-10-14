@@ -205,7 +205,7 @@ export default function Step5Contact({
                   <Button
                     onClick={handleSendEmailCode}
                     disabled={!isEmailValid || emailLoading}
-                    className="flex-shrink-0 bg-[#ed1a3b] hover:bg-[#d11632]"
+                    className="flex-shrink-0 bg-[#ed1a3b] hover:bg-[#d11632] text-white"
                   >
                     {emailLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -249,7 +249,7 @@ export default function Step5Contact({
                   <Button
                     onClick={handleSendPhoneCode}
                     disabled={!isPhoneValid || phoneLoading || phoneCodeSent}
-                    className="flex-shrink-0 bg-[#ed1a3b] hover:bg-[#d11632]"
+                    className="flex-shrink-0 bg-[#ed1a3b] hover:bg-[#d11632] text-white"
                   >
                     {phoneLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
