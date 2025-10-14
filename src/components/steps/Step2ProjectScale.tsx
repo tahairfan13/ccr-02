@@ -108,7 +108,7 @@ export default function Step2ProjectScale({
                   hover:shadow-md
                   ${
                     isSelected
-                      ? "border-[#ed1a3b] shadow-md bg-red-50/30"
+                      ? "border-[#ed1a3b] border-2 shadow-lg bg-red-50"
                       : "border-gray-200 hover:border-gray-300 bg-white"
                   }
                 `}
@@ -133,11 +133,6 @@ export default function Step2ProjectScale({
                       <p className="text-sm text-gray-600">
                         {option.description}
                       </p>
-                      {isSelected && (
-                        <span className="inline-block mt-2 text-xs font-semibold text-[#ed1a3b]">
-                          ✓ Selected
-                        </span>
-                      )}
                     </div>
                   </div>
 

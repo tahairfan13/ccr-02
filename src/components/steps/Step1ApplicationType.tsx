@@ -105,7 +105,7 @@ export default function Step1ApplicationType({
                   hover:shadow-md
                   ${
                     isSelected
-                      ? "border-[#ed1a3b] shadow-md bg-red-50/30"
+                      ? "border-[#ed1a3b] border-2 shadow-lg bg-red-50"
                       : "border-gray-200 hover:border-gray-300 bg-white"
                   }
                 `}
@@ -142,18 +142,6 @@ export default function Step1ApplicationType({
         })}
       </div>
 
-      {selectedTypes.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-6 flex items-center justify-center gap-2 text-sm text-gray-600"
-        >
-          <div className="w-2 h-2 rounded-full bg-[#0094ED]" />
-          <span className="font-medium">
-            {selectedTypes.length} type{selectedTypes.length > 1 ? "s" : ""} selected
-          </span>
-        </motion.div>
-      )}
     </div>
   );
 }

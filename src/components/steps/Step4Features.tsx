@@ -194,7 +194,7 @@ export default function Step4Features({
                         hover:shadow-md
                         ${
                           feature.selected
-                            ? "bg-red-50/30 border-[#ed1a3b]"
+                            ? "bg-red-50 border-[#ed1a3b] border-2 shadow-lg"
                             : "border-gray-200 hover:border-gray-300"
                         }
                       `}
