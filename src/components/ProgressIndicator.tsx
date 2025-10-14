@@ -12,8 +12,8 @@ const steps: Step[] = [
   { number: 1, title: "Type" },
   { number: 2, title: "Scale" },
   { number: 3, title: "Description" },
-  { number: 4, title: "Features" },
-  { number: 5, title: "Contact" },
+  { number: 4, title: "Contact" },
+  { number: 5, title: "Features" },
 ];
 
 interface ProgressIndicatorProps {

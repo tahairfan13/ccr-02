@@ -20,7 +20,7 @@ export default function Step4Features({
   const stats = useMemo(() => {
     const selectedFeatures = features.filter((f) => f.selected);
     const totalHours = selectedFeatures.reduce((sum, f) => sum + f.hours, 0);
-    const estimatedCost = totalHours * 50; // $50 per hour as example rate
+    const estimatedCost = totalHours * 30; // $30 per hour
 
     // Group features by category
     const categories = features.reduce((acc, feature) => {
@@ -103,11 +103,11 @@ export default function Step4Features({
         className="mb-8 md:mb-12"
       >
         <div className="inline-block px-3 py-1 rounded-md bg-gray-100 text-gray-600 text-sm font-medium mb-4">
-          Step 4 of 5
+          Step 5 of 5
         </div>
         <div className="flex items-center gap-3 mb-3">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
-            AI-Generated Features
+            AI-Generated Features & Cost Estimate
           </h2>
           <CheckCircle2 className="w-6 h-6 md:w-7 md:h-7 text-green-600" strokeWidth={2} />
         </div>

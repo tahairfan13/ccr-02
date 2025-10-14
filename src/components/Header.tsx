@@ -26,13 +26,6 @@ export default function Header() {
             Project Cost Calculator
           </p>
         </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-50 text-[#0094ED] text-xs font-semibold">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#0094ED]" />
-            <span>AI Powered</span>
-          </div>
-        </div>
       </div>
     </motion.header>
   );

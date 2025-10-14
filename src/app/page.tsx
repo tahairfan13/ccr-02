@@ -42,21 +42,21 @@ export default function Home() {
         const wordCount = formData.description.trim().split(/\s+/).filter(Boolean).length;
         return wordCount >= 20;
       case 4:
-        return formData.features.some((f) => f.selected);
-      case 5:
         return (
           formData.name.trim().length > 0 &&
           formData.emailVerified &&
           formData.phoneVerified
         );
+      case 5:
+        return formData.features.some((f) => f.selected);
       default:
         return false;
     }
   };
 
   const handleNext = async () => {
-    if (currentStep === 3 && formData.features.length === 0) {
-      // Generate features after step 3
+    if (currentStep === 4 && formData.features.length === 0) {
+      // Generate features after step 4 (contact info)
       await generateFeatures();
     }
     nextStep();
@@ -178,14 +178,6 @@ export default function Home() {
           )}
 
           {currentStep === 4 && (
-            <Step4Features
-              features={formData.features}
-              onToggleFeature={toggleFeature}
-              isLoading={isGeneratingFeatures}
-            />
-          )}
-
-          {currentStep === 5 && (
             <Step5Contact
               name={formData.name}
               email={formData.email}
@@ -194,6 +186,14 @@ export default function Home() {
               phoneVerified={formData.phoneVerified}
               onContactChange={updateContactInfo}
               onVerificationChange={updateVerificationStatus}
+            />
+          )}
+
+          {currentStep === 5 && (
+            <Step4Features
+              features={formData.features}
+              onToggleFeature={toggleFeature}
+              isLoading={isGeneratingFeatures}
             />
           )}
         </div>

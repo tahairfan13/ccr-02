@@ -37,11 +37,9 @@ export default function Step5Contact({
   onContactChange,
   onVerificationChange,
 }: Step5Props) {
-  const [emailCode, setEmailCode] = useState("");
   const [phoneCode, setPhoneCode] = useState("");
   const [emailLoading, setEmailLoading] = useState(false);
   const [phoneLoading, setPhoneLoading] = useState(false);
-  const [emailCodeSent, setEmailCodeSent] = useState(false);
   const [phoneCodeSent, setPhoneCodeSent] = useState(false);
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -51,40 +49,83 @@ export default function Step5Contact({
     if (!isEmailValid) return;
 
     setEmailLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setEmailCodeSent(true);
-    setEmailLoading(false);
-  };
+    try {
+      // Validate email domain (MX record check)
+      const response = await fetch("/api/validate-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
 
-  const handleVerifyEmail = async () => {
-    if (emailCode.length !== 6) return;
+      if (!response.ok) {
+        const error = await response.json();
+        alert(error.error || "Email validation failed. Please check your email address.");
+        return;
+      }
 
-    setEmailLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    onVerificationChange("emailVerified", true);
-    setEmailLoading(false);
+      // Email is valid, mark as verified (no code needed for bounce check)
+      onVerificationChange("emailVerified", true);
+      alert("Email validated successfully!");
+    } catch (error) {
+      console.error("Error validating email:", error);
+      alert("Failed to validate email. Please try again.");
+    } finally {
+      setEmailLoading(false);
+    }
   };
 
   const handleSendPhoneCode = async () => {
     if (!isPhoneValid) return;
 
     setPhoneLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setPhoneCodeSent(true);
-    setPhoneLoading(false);
+    try {
+      const response = await fetch("/api/send-phone-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(error.error || "Failed to send verification code. Please check your phone number.");
+        return;
+      }
+
+      setPhoneCodeSent(true);
+      alert("Verification code sent to your phone!");
+    } catch (error) {
+      console.error("Error sending phone code:", error);
+      alert("Failed to send verification code. Please try again.");
+    } finally {
+      setPhoneLoading(false);
+    }
   };
 
   const handleVerifyPhone = async () => {
     if (phoneCode.length !== 6) return;
 
     setPhoneLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    onVerificationChange("phoneVerified", true);
-    setPhoneLoading(false);
+    try {
+      const response = await fetch("/api/verify-phone-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, code: phoneCode }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(error.error || "Invalid verification code");
+        return;
+      }
+
+      onVerificationChange("phoneVerified", true);
+      alert("Phone number verified successfully!");
+    } catch (error) {
+      console.error("Error verifying phone code:", error);
+      alert("Failed to verify code. Please try again.");
+    } finally {
+      setPhoneLoading(false);
+    }
   };
 
   return (
@@ -96,7 +137,7 @@ export default function Step5Contact({
         className="mb-8 md:mb-12"
       >
         <div className="inline-block px-3 py-1 rounded-md bg-gray-100 text-gray-600 text-sm font-medium mb-4">
-          Step 5 of 5
+          Step 4 of 5
         </div>
         <div className="flex items-center gap-3 mb-3">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
@@ -105,7 +146,7 @@ export default function Step5Contact({
           <ShieldCheck className="w-6 h-6 md:w-7 md:h-7 text-[#0094ED]" strokeWidth={2} />
         </div>
         <p className="text-base text-gray-600 font-normal max-w-2xl">
-          We'll send your detailed cost estimate to these verified contacts
+          Provide your contact details to receive the AI-generated cost estimate
         </p>
       </motion.div>
 
@@ -156,15 +197,13 @@ export default function Step5Contact({
                 {!emailVerified && (
                   <Button
                     onClick={handleSendEmailCode}
-                    disabled={!isEmailValid || emailLoading || emailCodeSent}
+                    disabled={!isEmailValid || emailLoading}
                     className="flex-shrink-0 bg-[#0094ED] hover:bg-[#0070bd]"
                   >
                     {emailLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : emailCodeSent ? (
-                      "Code Sent"
                     ) : (
-                      "Send Code"
+                      "Validate"
                     )}
                   </Button>
                 )}
@@ -175,33 +214,6 @@ export default function Step5Contact({
                   </div>
                 )}
               </div>
-
-              {emailCodeSent && !emailVerified && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  className="flex gap-2"
-                >
-                  <Input
-                    value={emailCode}
-                    onChange={(e) => setEmailCode(e.target.value)}
-                    placeholder="Enter 6-digit code"
-                    maxLength={6}
-                    className="text-base border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b]"
-                  />
-                  <Button
-                    onClick={handleVerifyEmail}
-                    disabled={emailCode.length !== 6 || emailLoading}
-                    className="bg-[#ed1a3b] hover:bg-[#d11632]"
-                  >
-                    {emailLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      "Verify"
-                    )}
-                  </Button>
-                </motion.div>
-              )}
             </div>
           </div>
 
