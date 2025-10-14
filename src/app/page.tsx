@@ -41,7 +41,7 @@ export default function Home() {
         return formData.projectScale !== null;
       case 3:
         const wordCount = formData.description.trim().split(/\s+/).filter(Boolean).length;
-        return wordCount >= 20;
+        return wordCount >= 10;
       case 4:
         return (
           formData.name.trim().length > 0 &&

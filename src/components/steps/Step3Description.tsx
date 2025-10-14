@@ -16,7 +16,7 @@ export default function Step3Description({
 }: Step3Props) {
   const wordCount = description.trim().split(/\s+/).filter(Boolean).length;
   const charCount = description.length;
-  const minWords = 20;
+  const minWords = 10;
   const isValid = wordCount >= minWords;
 
   return (
