@@ -126,11 +126,12 @@ export default function Home() {
         description: formData.description,
         features: selectedFeatures,
         totalHours,
-        estimatedCost: totalHours * 50,
+        estimatedCost: totalHours * 30,
+        hourlyRate: 30,
         contact: {
           name: formData.name,
           email: formData.email,
-          phone: formData.phone,
+          phone_number: formData.phone,
         },
       };
 

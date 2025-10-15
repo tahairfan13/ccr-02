@@ -1,8 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import dns from "dns";
-import { promisify } from "util";
-
-const resolveMx = promisify(dns.resolveMx);
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,47 +11,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Basic email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Comprehensive email format validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) {
       return NextResponse.json(
-        { error: "Invalid email format", valid: false },
+        { error: "Invalid email format. Please enter a valid email address.", valid: false },
         { status: 400 }
       );
     }
 
-    // Extract domain from email
-    const domain = email.split("@")[1];
+    // Check for common disposable email domains
+    const disposableDomains = ['tempmail.com', 'throwaway.email', '10minutemail.com', 'guerrillamail.com'];
+    const domain = email.split("@")[1].toLowerCase();
 
-    try {
-      // Check if domain has MX records (mail servers)
-      const mxRecords = await resolveMx(domain);
-
-      if (mxRecords && mxRecords.length > 0) {
-        return NextResponse.json({
-          success: true,
-          valid: true,
-          message: "Email domain is valid",
-        });
-      } else {
-        return NextResponse.json(
-          {
-            error: "Email domain has no mail servers",
-            valid: false
-          },
-          { status: 400 }
-        );
-      }
-    } catch (dnsError: any) {
-      // DNS lookup failed - domain doesn't exist or has no MX records
+    if (disposableDomains.includes(domain)) {
       return NextResponse.json(
-        {
-          error: "Email domain does not exist or cannot receive emails",
-          valid: false
-        },
+        { error: "Please use a valid business or personal email address.", valid: false },
         { status: 400 }
       );
     }
+
+    // Email format is valid
+    return NextResponse.json({
+      success: true,
+      valid: true,
+      message: "Email format is valid",
+    });
   } catch (error: any) {
     console.error("Error validating email:", error);
     return NextResponse.json(
