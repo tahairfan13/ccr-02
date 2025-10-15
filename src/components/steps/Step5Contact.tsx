@@ -136,23 +136,23 @@ export default function Step5Contact({
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4">
+    <div className="w-full max-w-3xl mx-auto px-4 py-2 md:py-0">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="mb-8 md:mb-12"
+        className="mb-3 md:mb-12"
       >
-        <div className="inline-block px-3 py-1 rounded-md bg-gray-100 text-gray-600 text-sm font-medium mb-4">
+        <div className="hidden md:inline-block px-3 py-1 rounded-md bg-gray-100 text-gray-600 text-sm font-medium mb-4">
           Step 4 of 5
         </div>
-        <div className="flex items-center gap-3 mb-3">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+        <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+          <h2 className="text-xl md:text-3xl font-bold text-gray-900">
             Contact Information
           </h2>
-          <ShieldCheck className="w-6 h-6 md:w-7 md:h-7 text-[#0094ED]" strokeWidth={2} />
+          <ShieldCheck className="w-5 h-5 md:w-7 md:h-7 text-[#0094ED]" strokeWidth={2} />
         </div>
-        <p className="text-base text-gray-600 font-normal max-w-2xl">
+        <p className="text-sm md:text-base text-gray-600 font-normal max-w-2xl">
           Provide your contact details to receive the AI-generated cost estimate
         </p>
       </motion.div>
@@ -162,12 +162,12 @@ export default function Step5Contact({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1 }}
       >
-        <Card className="p-6 md:p-8 space-y-6 border-gray-200">
+        <Card className="p-4 md:p-8 space-y-4 md:space-y-6 border-gray-200">
           {/* Name */}
           <div>
-            <Label htmlFor="name" className="flex items-center gap-2 mb-3 text-sm font-semibold text-gray-900">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
-                <User className="w-4 h-4 text-white" strokeWidth={2} />
+            <Label htmlFor="name" className="flex items-center gap-2 mb-2 md:mb-3 text-xs md:text-sm font-semibold text-gray-900">
+              <div className="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+                <User className="w-3 h-3 md:w-4 md:h-4 text-white" strokeWidth={2} />
               </div>
               Full Name
             </Label>
@@ -176,15 +176,15 @@ export default function Step5Contact({
               value={name}
               onChange={(e) => onContactChange(e.target.value, email, phone)}
               placeholder="John Doe"
-              className="text-base border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b]"
+              className="text-sm md:text-base border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b]"
             />
           </div>
 
           {/* Email with Verification */}
           <div>
-            <Label htmlFor="email" className="flex items-center gap-2 mb-3 text-sm font-semibold text-gray-900">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#ed1a3b] to-[#d11632] flex items-center justify-center">
-                <Mail className="w-4 h-4 text-white" strokeWidth={2} />
+            <Label htmlFor="email" className="flex items-center gap-2 mb-2 md:mb-3 text-xs md:text-sm font-semibold text-gray-900">
+              <div className="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-gradient-to-br from-[#ed1a3b] to-[#d11632] flex items-center justify-center">
+                <Mail className="w-3 h-3 md:w-4 md:h-4 text-white" strokeWidth={2} />
               </div>
               Email Address
             </Label>
@@ -226,13 +226,13 @@ export default function Step5Contact({
 
           {/* Phone with Verification */}
           <div>
-            <Label htmlFor="phone" className="flex items-center gap-2 mb-3 text-sm font-semibold text-gray-900">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#0094ED] to-[#0070bd] flex items-center justify-center">
-                <Phone className="w-4 h-4 text-white" strokeWidth={2} />
+            <Label htmlFor="phone" className="flex items-center gap-2 mb-2 md:mb-3 text-xs md:text-sm font-semibold text-gray-900">
+              <div className="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-gradient-to-br from-[#0094ED] to-[#0070bd] flex items-center justify-center">
+                <Phone className="w-3 h-3 md:w-4 md:h-4 text-white" strokeWidth={2} />
               </div>
               Phone Number
             </Label>
-            <div className="space-y-3">
+            <div className="space-y-2 md:space-y-3">
               <div className="flex gap-2">
                 <Input
                   id="phone"
@@ -242,7 +242,7 @@ export default function Step5Contact({
                     onContactChange(name, email, e.target.value)
                   }
                   placeholder="+1 (555) 123-4567"
-                  className="text-base flex-grow border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b]"
+                  className="text-sm md:text-base flex-grow border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b]"
                   disabled={phoneVerified}
                 />
                 {!phoneVerified && (

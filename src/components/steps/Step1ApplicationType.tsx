@@ -67,25 +67,25 @@ export default function Step1ApplicationType({
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4">
+    <div className="w-full max-w-4xl mx-auto px-4 py-2 md:py-0">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="mb-8 md:mb-12"
+        className="mb-3 md:mb-12"
       >
-        <div className="inline-block px-3 py-1 rounded-md bg-gray-100 text-gray-600 text-sm font-medium mb-4">
+        <div className="hidden md:inline-block px-3 py-1 rounded-md bg-gray-100 text-gray-600 text-sm font-medium mb-4">
           Step 1 of 5
         </div>
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+        <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-3">
           Select Application Type
         </h2>
-        <p className="text-base text-gray-600 font-normal max-w-2xl">
+        <p className="text-sm md:text-base text-gray-600 font-normal max-w-2xl">
           Choose one or more application types for your project
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-5">
         {applicationTypes.map((option, index) => {
           const isSelected = selectedTypes.includes(option.type);
 
@@ -111,26 +111,28 @@ export default function Step1ApplicationType({
                 `}
                 onClick={() => toggleType(option.type)}
               >
-                <div className="p-6 md:p-7">
-                  <div className="flex items-start gap-5 mb-4">
+                <div className="p-4 md:p-7">
+                  <div className="flex items-start gap-3 md:gap-5">
                     {/* Colorful Icon */}
                     <div
                       className={`
-                        w-16 h-16 rounded-2xl bg-gradient-to-br ${option.gradient}
+                        w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-gradient-to-br ${option.gradient}
                         flex items-center justify-center text-white flex-shrink-0
                         shadow-lg transition-transform duration-200
                         ${isSelected ? "scale-105 shadow-xl" : "group-hover:scale-105"}
                       `}
                     >
-                      {option.icon}
+                      <div className="scale-75 md:scale-100">
+                        {option.icon}
+                      </div>
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 min-w-0 pt-1">
-                      <h3 className="text-xl font-bold text-gray-900 mb-2 leading-tight">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base md:text-xl font-bold text-gray-900 mb-1 md:mb-2 leading-tight">
                         {option.title}
                       </h3>
-                      <p className="text-sm text-gray-600 leading-relaxed">
+                      <p className="text-xs md:text-sm text-gray-600 leading-relaxed">
                         {option.description}
                       </p>
                     </div>

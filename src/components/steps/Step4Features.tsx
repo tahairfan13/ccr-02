@@ -95,23 +95,23 @@ export default function Step4Features({
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4">
+    <div className="w-full max-w-6xl mx-auto px-4 py-2 md:py-0">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="mb-8 md:mb-12"
+        className="mb-3 md:mb-12"
       >
-        <div className="inline-block px-3 py-1 rounded-md bg-gray-100 text-gray-600 text-sm font-medium mb-4">
+        <div className="hidden md:inline-block px-3 py-1 rounded-md bg-gray-100 text-gray-600 text-sm font-medium mb-4">
           Step 5 of 5
         </div>
-        <div className="flex items-center gap-3 mb-3">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+        <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+          <h2 className="text-lg md:text-3xl font-bold text-gray-900">
             AI-Generated Features & Cost Estimate
           </h2>
-          <CheckCircle2 className="w-6 h-6 md:w-7 md:h-7 text-green-600" strokeWidth={2} />
+          <CheckCircle2 className="w-5 h-5 md:w-7 md:h-7 text-green-600" strokeWidth={2} />
         </div>
-        <p className="text-base text-gray-600 font-normal max-w-2xl">
+        <p className="text-sm md:text-base text-gray-600 font-normal max-w-2xl">
           Review and select the features you want to include in your project
         </p>
       </motion.div>
@@ -121,42 +121,42 @@ export default function Step4Features({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 mb-8"
+        className="grid grid-cols-3 gap-2 md:gap-5 mb-4 md:mb-8"
       >
-        <Card className="p-5 md:p-6 border-red-200 bg-red-50/50">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#ed1a3b] to-[#d11632] flex items-center justify-center shadow-md">
-              <Package className="w-5 h-5 text-white" strokeWidth={2} />
+        <Card className="p-3 md:p-6 border-red-200 bg-red-50/50">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3">
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-gradient-to-br from-[#ed1a3b] to-[#d11632] flex items-center justify-center shadow-md">
+              <Package className="w-3 h-3 md:w-5 md:h-5 text-white" strokeWidth={2} />
             </div>
             <div>
-              <p className="text-sm text-gray-600 font-medium">Features Selected</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {stats.selectedCount} / {stats.totalCount}
+              <p className="text-[10px] md:text-sm text-gray-600 font-medium">Selected</p>
+              <p className="text-sm md:text-2xl font-bold text-gray-900">
+                {stats.selectedCount}/{stats.totalCount}
               </p>
             </div>
           </div>
         </Card>
 
-        <Card className="p-5 md:p-6 border-blue-200 bg-blue-50/50">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0094ED] to-[#0070bd] flex items-center justify-center shadow-md">
-              <Clock className="w-5 h-5 text-white" strokeWidth={2} />
+        <Card className="p-3 md:p-6 border-blue-200 bg-blue-50/50">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3">
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-gradient-to-br from-[#0094ED] to-[#0070bd] flex items-center justify-center shadow-md">
+              <Clock className="w-3 h-3 md:w-5 md:h-5 text-white" strokeWidth={2} />
             </div>
             <div>
-              <p className="text-sm text-gray-600 font-medium">Total Hours</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalHours}h</p>
+              <p className="text-[10px] md:text-sm text-gray-600 font-medium">Hours</p>
+              <p className="text-sm md:text-2xl font-bold text-gray-900">{stats.totalHours}h</p>
             </div>
           </div>
         </Card>
 
-        <Card className="p-5 md:p-6 border-green-200 bg-green-50/50">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-md">
-              <span className="text-xl font-bold text-white">$</span>
+        <Card className="p-3 md:p-6 border-green-200 bg-green-50/50">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3">
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-md">
+              <span className="text-sm md:text-xl font-bold text-white">$</span>
             </div>
             <div>
-              <p className="text-sm text-gray-600 font-medium">Estimated Cost</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-[10px] md:text-sm text-gray-600 font-medium">Cost</p>
+              <p className="text-sm md:text-2xl font-bold text-gray-900">
                 ${stats.estimatedCost.toLocaleString()}
               </p>
             </div>
@@ -165,7 +165,7 @@ export default function Step4Features({
       </motion.div>
 
       {/* Features by Category */}
-      <div className="space-y-6">
+      <div className="space-y-3 md:space-y-6">
         {Object.entries(stats.categories).map(([category, categoryFeatures], categoryIndex) => (
           <motion.div
             key={category}
@@ -173,12 +173,12 @@ export default function Step4Features({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 + categoryIndex * 0.1 }}
           >
-            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <div className="w-1 h-6 bg-gradient-to-b from-[#ed1a3b] to-[#d11632] rounded-full" />
+            <h3 className="text-base md:text-xl font-bold text-gray-900 mb-2 md:mb-4 flex items-center gap-2">
+              <div className="w-1 h-4 md:h-6 bg-gradient-to-b from-[#ed1a3b] to-[#d11632] rounded-full" />
               {category}
             </h3>
 
-            <div className="space-y-3">
+            <div className="space-y-2 md:space-y-3">
               <AnimatePresence>
                 {categoryFeatures.map((feature, index) => (
                   <motion.div
@@ -190,7 +190,7 @@ export default function Step4Features({
                   >
                     <Card
                       className={`
-                        p-4 md:p-5 cursor-pointer transition-all duration-200
+                        p-3 md:p-5 cursor-pointer transition-all duration-200
                         hover:shadow-md
                         ${
                           feature.selected
@@ -200,18 +200,18 @@ export default function Step4Features({
                       `}
                       onClick={() => onToggleFeature(feature.id)}
                     >
-                      <div className="flex items-start justify-between gap-4 mb-2">
-                        <h4 className="font-bold text-base text-gray-900">
+                      <div className="flex items-start justify-between gap-2 md:gap-4 mb-1 md:mb-2">
+                        <h4 className="font-bold text-sm md:text-base text-gray-900">
                           {feature.name}
                         </h4>
-                        <div className="flex items-center gap-2 flex-shrink-0 px-2.5 py-1 rounded-md bg-blue-50">
-                          <Clock className="w-4 h-4 text-[#0094ED]" strokeWidth={2} />
-                          <span className="text-sm font-semibold text-[#0094ED]">
+                        <div className="flex items-center gap-1 md:gap-2 flex-shrink-0 px-2 md:px-2.5 py-0.5 md:py-1 rounded-md bg-blue-50">
+                          <Clock className="w-3 h-3 md:w-4 md:h-4 text-[#0094ED]" strokeWidth={2} />
+                          <span className="text-xs md:text-sm font-semibold text-[#0094ED]">
                             {feature.hours}h
                           </span>
                         </div>
                       </div>
-                      <p className="text-sm text-gray-600 leading-relaxed">
+                      <p className="text-xs md:text-sm text-gray-600 leading-relaxed">
                         {feature.description}
                       </p>
                     </Card>

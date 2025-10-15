@@ -171,13 +171,13 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen md:min-h-screen bg-background flex flex-col overflow-hidden md:overflow-auto">
       <Header />
 
-      <main className="pb-20 flex-grow">
+      <main className="flex-1 flex flex-col overflow-hidden md:overflow-visible md:pb-20">
         <ProgressIndicator currentStep={currentStep} />
 
-        <div className="mt-8 mb-12">
+        <div className="flex-1 overflow-y-auto md:overflow-visible md:mt-8 md:mb-12">
           {currentStep === 1 && (
             <Step1ApplicationType
               selectedTypes={formData.applicationTypes}
@@ -224,7 +224,7 @@ export default function Home() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-4xl mx-auto px-4 flex items-center justify-between gap-3 md:gap-4 mb-8"
+          className="max-w-4xl mx-auto px-4 flex items-center justify-between gap-3 md:gap-4 py-3 md:py-0 md:mb-8 bg-white md:bg-transparent sticky md:static bottom-0 border-t md:border-t-0 border-gray-100 z-10"
         >
           <Button
             variant="outline"

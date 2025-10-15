@@ -73,25 +73,25 @@ export default function Step2ProjectScale({
   onSelectScale,
 }: Step2Props) {
   return (
-    <div className="w-full max-w-6xl mx-auto px-4">
+    <div className="w-full max-w-6xl mx-auto px-4 py-2 md:py-0">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="mb-8 md:mb-12"
+        className="mb-3 md:mb-12"
       >
-        <div className="inline-block px-3 py-1 rounded-md bg-gray-100 text-gray-600 text-sm font-medium mb-4">
+        <div className="hidden md:inline-block px-3 py-1 rounded-md bg-gray-100 text-gray-600 text-sm font-medium mb-4">
           Step 2 of 5
         </div>
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+        <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-3">
           Select Project Scale
         </h2>
-        <p className="text-base text-gray-600 font-normal max-w-2xl">
+        <p className="text-sm md:text-base text-gray-600 font-normal max-w-2xl">
           Choose the level that best matches your project needs and budget
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
         {scaleOptions.map((option, index) => {
           const isSelected = selectedScale === option.scale;
 
@@ -114,38 +114,40 @@ export default function Step2ProjectScale({
                 `}
                 onClick={() => onSelectScale(option.scale)}
               >
-                <div className="p-6 md:p-7 flex flex-col h-full">
+                <div className="p-4 md:p-7 flex flex-col h-full">
                   {/* Icon with gradient background */}
-                  <div className="mb-5">
+                  <div className="mb-3 md:mb-5">
                     <div
                       className={`
-                        w-16 h-16 rounded-2xl bg-gradient-to-br ${option.gradient}
+                        w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-gradient-to-br ${option.gradient}
                         flex items-center justify-center text-white
-                        shadow-lg mb-4 transition-transform duration-200
+                        shadow-lg mb-2 md:mb-4 transition-transform duration-200
                         ${isSelected ? "scale-105 shadow-xl" : "group-hover:scale-105"}
                       `}
                     >
-                      {option.icon}
+                      <div className="scale-75 md:scale-100">
+                        {option.icon}
+                      </div>
                     </div>
 
                     <div className="mb-2">
-                      <h3 className="text-2xl font-bold text-gray-900">{option.title}</h3>
-                      <p className="text-sm text-gray-600">
+                      <h3 className="text-lg md:text-2xl font-bold text-gray-900">{option.title}</h3>
+                      <p className="text-xs md:text-sm text-gray-600">
                         {option.description}
                       </p>
                     </div>
                   </div>
 
                   {/* Features list */}
-                  <div className="flex-grow mt-4">
-                    <ul className="space-y-3">
+                  <div className="flex-grow">
+                    <ul className="space-y-2 md:space-y-3">
                       {option.features.map((feature, idx) => (
                         <motion.li
                           key={idx}
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.1 + idx * 0.05 }}
-                          className="flex items-start gap-2.5"
+                          className="flex items-start gap-2"
                         >
                           <div
                             className={`
@@ -153,7 +155,7 @@ export default function Step2ProjectScale({
                               bg-gradient-to-r ${option.gradient}
                             `}
                           />
-                          <span className="text-sm text-gray-600 leading-relaxed">
+                          <span className="text-xs md:text-sm text-gray-600 leading-relaxed">
                             {feature}
                           </span>
                         </motion.li>

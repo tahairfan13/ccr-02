@@ -26,18 +26,18 @@ export default function ProgressIndicator({
   const progress = (currentStep / steps.length) * 100;
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-6 md:py-8">
+    <div className="w-full max-w-4xl mx-auto px-4 py-3 md:py-8 flex-shrink-0">
       {/* Mobile Progress Bar */}
-      <div className="md:hidden mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-medium text-gray-900">
+      <div className="md:hidden mb-3">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-medium text-gray-900">
             Step {currentStep} of {steps.length}
           </span>
-          <span className="text-sm font-semibold text-[#ed1a3b]">
+          <span className="text-xs font-semibold text-[#ed1a3b]">
             {Math.round(progress)}%
           </span>
         </div>
-        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
           <motion.div
             className="h-full bg-[#ed1a3b] rounded-full"
             initial={{ width: 0 }}

@@ -20,25 +20,25 @@ export default function Step3Description({
   const isValid = wordCount >= minWords;
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4">
+    <div className="w-full max-w-4xl mx-auto px-4 py-2 md:py-0">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="mb-8 md:mb-12"
+        className="mb-3 md:mb-12"
       >
-        <div className="inline-block px-3 py-1 rounded-md bg-gray-100 text-gray-600 text-sm font-medium mb-4">
+        <div className="hidden md:inline-block px-3 py-1 rounded-md bg-gray-100 text-gray-600 text-sm font-medium mb-4">
           Step 3 of 5
         </div>
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+        <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-3">
           Describe Your Project
         </h2>
-        <p className="text-base text-gray-600 font-normal max-w-2xl">
+        <p className="text-sm md:text-base text-gray-600 font-normal max-w-2xl">
           Tell us about your vision. Our AI will analyze your description to generate tailored features and cost estimates.
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6">
         {/* Main Description Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -47,14 +47,14 @@ export default function Step3Description({
           className="lg:col-span-2"
         >
           <Card className="border-gray-200 hover:border-gray-300 transition-all duration-200">
-            <div className="p-6 md:p-7">
-              <div className="mb-4">
+            <div className="p-4 md:p-7">
+              <div>
                 <label
                   htmlFor="description"
-                  className="flex items-center gap-2 text-sm font-semibold text-gray-900 mb-3"
+                  className="flex items-center gap-2 text-xs md:text-sm font-semibold text-gray-900 mb-2 md:mb-3"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#ed1a3b] to-[#d11632] flex items-center justify-center">
-                    <FileText className="w-4 h-4 text-white" strokeWidth={2} />
+                  <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-[#ed1a3b] to-[#d11632] flex items-center justify-center">
+                    <FileText className="w-3 h-3 md:w-4 md:h-4 text-white" strokeWidth={2} />
                   </div>
                   Project Details
                 </label>
@@ -63,14 +63,14 @@ export default function Step3Description({
                   id="description"
                   value={description}
                   onChange={(e) => onDescriptionChange(e.target.value)}
-                  placeholder="Example: I want to build a mobile fitness app that helps users track workouts, monitor nutrition, and connect with friends. The app needs user authentication, workout library with videos, meal planning with barcode scanning, progress tracking with charts, social feed for sharing achievements, and AI-powered personalized recommendations..."
-                  className="min-h-[280px] text-base resize-none border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b] transition-all rounded-lg"
+                  placeholder="Example: I want to build a mobile fitness app that helps users track workouts, monitor nutrition, and connect with friends..."
+                  className="min-h-[120px] md:min-h-[280px] text-sm md:text-base resize-none border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b] transition-all rounded-lg"
                 />
 
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                  <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center justify-between mt-2 md:mt-4 pt-2 md:pt-4 border-t border-gray-100">
+                  <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm">
                     <span className={`font-medium ${charCount > 2000 ? "text-red-600" : "text-gray-500"}`}>
-                      {charCount} / 2000 characters
+                      {charCount} / 2000
                     </span>
                     <span className={`font-medium ${isValid ? "text-green-600" : "text-gray-500"}`}>
                       {wordCount} words {!isValid && `(min ${minWords})`}
@@ -81,10 +81,11 @@ export default function Step3Description({
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="flex items-center gap-2 text-sm font-semibold text-green-600"
+                      className="flex items-center gap-1 md:gap-2 text-xs md:text-sm font-semibold text-green-600"
                     >
-                      <div className="w-2 h-2 rounded-full bg-green-600 animate-pulse" />
-                      Ready for AI
+                      <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-green-600 animate-pulse" />
+                      <span className="hidden md:inline">Ready for AI</span>
+                      <span className="md:hidden">Ready</span>
                     </motion.div>
                   )}
                 </div>
@@ -98,11 +99,11 @@ export default function Step3Description({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
-          className="lg:col-span-1 space-y-4"
+          className="lg:col-span-1 space-y-3 md:space-y-4 hidden lg:block"
         >
           {/* AI Tips Card */}
           <Card className="border-blue-200 bg-blue-50/50">
-            <div className="p-5">
+            <div className="p-4 md:p-5">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0094ED] to-[#0070bd] flex items-center justify-center">
                   <Sparkles className="w-4 h-4 text-white" strokeWidth={2} />
