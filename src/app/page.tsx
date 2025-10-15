@@ -135,20 +135,35 @@ export default function Home() {
         },
       };
 
-      // TODO: Replace with your actual endpoint
       console.log("Submitting data:", payload);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      toast.success("Estimate submitted successfully!", {
-        description: "Your detailed cost estimate has been sent to your email.",
-        duration: 5000,
+      // Submit to actual API endpoint
+      const response = await fetch("https://94d9590a1894.ngrok-free.app/api/v1/submit_estimate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+        body: JSON.stringify(payload),
       });
-    } catch (error) {
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
+        throw new Error(errorData.message || `Server error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("Submission successful:", result);
+
+      toast.success("🎉 Estimate Submitted Successfully!", {
+        description: "Thank you! Your project estimate has been sent to your email. Our sales team will contact you within 24 hours to discuss your requirements.",
+        duration: 6000,
+      });
+    } catch (error: any) {
       console.error("Error submitting form:", error);
-      toast.error("Submission failed", {
-        description: "There was an error submitting your request. Please try again.",
+      toast.error("❌ Submission Failed", {
+        description: error.message || "We couldn't submit your request. Please try again or contact us at hello@tecaudex.com",
+        duration: 5000,
       });
     } finally {
       setIsSubmitting(false);
