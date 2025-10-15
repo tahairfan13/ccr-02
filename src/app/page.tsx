@@ -138,11 +138,10 @@ export default function Home() {
       console.log("Submitting data:", payload);
 
       // Submit to actual API endpoint
-      const response = await fetch("https://94d9590a1894.ngrok-free.app/api/v1/submit_estimate", {
+      const response = await fetch("https:/crm.tecaudex.com/api/v1/submit_estimate", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true",
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(payload),
       });
