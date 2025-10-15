@@ -26,24 +26,46 @@ export default function ProgressIndicator({
   const progress = (currentStep / steps.length) * 100;
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-3 md:py-8 flex-shrink-0">
+    <div className="w-full max-w-4xl mx-auto px-4 py-3 md:py-8 flex-shrink-0 bg-white md:bg-transparent border-b md:border-b-0 border-gray-100">
       {/* Mobile Progress Bar */}
-      <div className="md:hidden mb-3">
+      <div className="md:hidden mb-1">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-medium text-gray-900">
-            Step {currentStep} of {steps.length}
-          </span>
-          <span className="text-xs font-semibold text-[#ed1a3b]">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#ed1a3b] to-[#d11632] flex items-center justify-center shadow-sm">
+              <span className="text-xs font-bold text-white">{currentStep}</span>
+            </div>
+            <div>
+              <span className="text-xs font-bold text-gray-900 block">
+                {steps[currentStep - 1].title}
+              </span>
+              <span className="text-[10px] text-gray-500">
+                Step {currentStep} of {steps.length}
+              </span>
+            </div>
+          </div>
+          <span className="text-xs font-bold text-[#ed1a3b] bg-red-50 px-2.5 py-1 rounded-full">
             {Math.round(progress)}%
           </span>
         </div>
-        <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden shadow-inner">
           <motion.div
-            className="h-full bg-[#ed1a3b] rounded-full"
+            className="h-full bg-gradient-to-r from-[#ed1a3b] to-[#d11632] rounded-full relative"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-          />
+          >
+            <motion.div
+              className="absolute inset-0 bg-white/30"
+              animate={{
+                x: ['-100%', '100%']
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            />
+          </motion.div>
         </div>
       </div>
 

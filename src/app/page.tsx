@@ -171,68 +171,86 @@ export default function Home() {
   };
 
   return (
-    <div className="h-screen md:min-h-screen bg-background flex flex-col overflow-hidden md:overflow-auto">
+    <div className="h-screen md:min-h-screen bg-background flex flex-col md:block">
       <Header />
 
-      <main className="flex-1 flex flex-col overflow-hidden md:overflow-visible md:pb-20">
+      <main className="flex-1 flex flex-col min-h-0 md:block md:pb-20">
         <ProgressIndicator currentStep={currentStep} />
 
-        <div className="flex-1 overflow-y-auto md:overflow-visible md:mt-8 md:mb-12">
-          {currentStep === 1 && (
-            <Step1ApplicationType
-              selectedTypes={formData.applicationTypes}
-              onSelectType={updateApplicationTypes}
-            />
-          )}
+        <div className="flex-1 overflow-y-auto md:overflow-visible pb-4 md:pb-0 md:mt-8 md:mb-12 relative"
+             style={{
+               WebkitOverflowScrolling: 'touch',
+               scrollbarWidth: 'none',
+               msOverflowStyle: 'none'
+             }}>
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0, x: window.innerWidth < 768 ? 20 : 0, y: window.innerWidth >= 768 ? 10 : 0 }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            exit={{ opacity: 0, x: window.innerWidth < 768 ? -20 : 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+          >
+            {currentStep === 1 && (
+              <Step1ApplicationType
+                selectedTypes={formData.applicationTypes}
+                onSelectType={updateApplicationTypes}
+              />
+            )}
 
-          {currentStep === 2 && (
-            <Step2ProjectScale
-              selectedScale={formData.projectScale}
-              onSelectScale={updateProjectScale}
-            />
-          )}
+            {currentStep === 2 && (
+              <Step2ProjectScale
+                selectedScale={formData.projectScale}
+                onSelectScale={updateProjectScale}
+              />
+            )}
 
-          {currentStep === 3 && (
-            <Step3Description
-              description={formData.description}
-              onDescriptionChange={updateDescription}
-            />
-          )}
+            {currentStep === 3 && (
+              <Step3Description
+                description={formData.description}
+                onDescriptionChange={updateDescription}
+              />
+            )}
 
-          {currentStep === 4 && (
-            <Step5Contact
-              name={formData.name}
-              email={formData.email}
-              phone={formData.phone}
-              emailVerified={formData.emailVerified}
-              phoneVerified={formData.phoneVerified}
-              onContactChange={updateContactInfo}
-              onVerificationChange={updateVerificationStatus}
-            />
-          )}
+            {currentStep === 4 && (
+              <Step5Contact
+                name={formData.name}
+                email={formData.email}
+                phone={formData.phone}
+                emailVerified={formData.emailVerified}
+                phoneVerified={formData.phoneVerified}
+                onContactChange={updateContactInfo}
+                onVerificationChange={updateVerificationStatus}
+              />
+            )}
 
-          {currentStep === 5 && (
-            <Step4Features
-              features={formData.features}
-              onToggleFeature={toggleFeature}
-              isLoading={isGeneratingFeatures}
-            />
-          )}
+            {currentStep === 5 && (
+              <Step4Features
+                features={formData.features}
+                onToggleFeature={toggleFeature}
+                isLoading={isGeneratingFeatures}
+              />
+            )}
+          </motion.div>
         </div>
 
-        {/* Navigation Buttons */}
+        {/* Navigation Buttons - Fixed at bottom on mobile */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-4xl mx-auto px-4 flex items-center justify-between gap-3 md:gap-4 py-3 md:py-0 md:mb-8 bg-white md:bg-transparent sticky md:static bottom-0 border-t md:border-t-0 border-gray-100 z-10"
+          className="flex-shrink-0 w-full md:w-auto"
         >
+          <div className="max-w-4xl mx-auto px-4 flex items-center justify-between gap-3 md:gap-4 py-4 md:py-0 md:mb-8 bg-white md:bg-transparent border-t md:border-t-0 border-gray-200 md:border-0 shadow-[0_-4px_12px_-2px_rgba(0,0,0,0.08)] md:shadow-none"
+               style={{
+                 paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
+                 paddingTop: 'max(1rem, env(safe-area-inset-top))'
+               }}>
           <Button
             variant="outline"
             onClick={prevStep}
             disabled={currentStep === 1 || isGeneratingFeatures || isSubmitting}
-            className="flex items-center gap-2 px-5 py-2.5 md:px-6 md:py-3 text-sm md:text-base font-semibold border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 md:gap-2 px-4 py-3 md:px-6 md:py-3 text-sm md:text-base font-semibold border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all rounded-xl md:rounded-lg disabled:opacity-40 disabled:cursor-not-allowed shadow-sm active:scale-95 md:active:scale-100"
           >
-            <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" strokeWidth={2} />
+            <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" strokeWidth={2.5} />
             <span className="hidden sm:inline">Back</span>
           </Button>
 
@@ -240,7 +258,7 @@ export default function Home() {
             <Button
               onClick={handleNext}
               disabled={!canProceed() || isGeneratingFeatures}
-              className="flex items-center gap-2 px-6 py-2.5 md:px-8 md:py-3 text-sm md:text-base font-semibold bg-[#ed1a3b] hover:bg-[#d11632] text-white transition-all rounded-lg shadow-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#ed1a3b]"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-3 text-sm md:text-base font-bold bg-gradient-to-r from-[#ed1a3b] to-[#d11632] md:bg-[#ed1a3b] hover:from-[#d11632] hover:to-[#b01228] md:hover:bg-[#d11632] text-white transition-all rounded-xl md:rounded-lg shadow-lg md:shadow-sm hover:shadow-xl disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:from-[#ed1a3b] disabled:hover:to-[#d11632] disabled:hover:bg-[#ed1a3b] active:scale-95 md:active:scale-100"
             >
               {isGeneratingFeatures ? (
                 <>
@@ -250,8 +268,8 @@ export default function Home() {
                 </>
               ) : (
                 <>
-                  <span>Continue</span>
-                  <ArrowRight className="w-4 h-4 md:w-5 md:h-5" strokeWidth={2} />
+                  <span className="font-bold">Continue</span>
+                  <ArrowRight className="w-5 h-5 md:w-5 md:h-5" strokeWidth={2.5} />
                 </>
               )}
             </Button>
@@ -259,23 +277,23 @@ export default function Home() {
             <Button
               onClick={handleSubmit}
               disabled={!canProceed() || isSubmitting}
-              className="flex items-center gap-2 px-6 py-2.5 md:px-8 md:py-3 text-sm md:text-base font-semibold bg-[#ed1a3b] hover:bg-[#d11632] text-white transition-all rounded-lg shadow-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#ed1a3b]"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-3 text-sm md:text-base font-bold bg-gradient-to-r from-green-600 to-green-700 md:bg-[#ed1a3b] hover:from-green-700 hover:to-green-800 md:hover:bg-[#d11632] text-white transition-all rounded-xl md:rounded-lg shadow-lg md:shadow-sm hover:shadow-xl disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:from-green-600 disabled:hover:to-green-700 disabled:hover:bg-[#ed1a3b] active:scale-95 md:active:scale-100"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" strokeWidth={2} />
+                  <Loader2 className="w-5 h-5 md:w-5 md:h-5 animate-spin" strokeWidth={2} />
                   <span className="hidden sm:inline">Submitting...</span>
                   <span className="sm:hidden">Sending...</span>
                 </>
               ) : (
                 <>
-                  <span className="hidden sm:inline">Get Estimate</span>
-                  <span className="sm:inline hidden sm:hidden">Submit</span>
-                  <Send className="w-4 h-4 md:w-5 md:h-5" strokeWidth={2} />
+                  <span className="font-bold">Get Estimate</span>
+                  <Send className="w-5 h-5 md:w-5 md:h-5" strokeWidth={2.5} />
                 </>
               )}
             </Button>
           )}
+          </div>
         </motion.div>
       </main>
 
