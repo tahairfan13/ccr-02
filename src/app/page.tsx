@@ -184,10 +184,10 @@ export default function Home() {
              }}>
           <motion.div
             key={currentStep}
-            initial={{ opacity: 0, x: window.innerWidth < 768 ? 20 : 0, y: window.innerWidth >= 768 ? 10 : 0 }}
-            animate={{ opacity: 1, x: 0, y: 0 }}
-            exit={{ opacity: 0, x: window.innerWidth < 768 ? -20 : 0 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
+            className="md:animate-none"
           >
             {currentStep === 1 && (
               <Step1ApplicationType
