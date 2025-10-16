@@ -18,6 +18,8 @@ export interface FormData {
   features: Feature[];
   name: string;
   email: string;
+  country: string;
+  countryCode: string;
   phone: string;
   emailVerified: boolean;
   phoneVerified: boolean;

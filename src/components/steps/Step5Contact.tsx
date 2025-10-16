@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import {
   User,
   Mail,
@@ -14,15 +15,19 @@ import {
   CheckCircle2,
   Loader2,
   ShieldCheck,
+  Globe,
 } from "lucide-react";
+import { COUNTRIES } from "@/constants/countries";
 
 interface Step5Props {
   name: string;
   email: string;
+  country: string;
+  countryCode: string;
   phone: string;
   emailVerified: boolean;
   phoneVerified: boolean;
-  onContactChange: (name: string, email: string, phone: string) => void;
+  onContactChange: (name: string, email: string, country: string, countryCode: string, phone: string) => void;
   onVerificationChange: (
     field: "emailVerified" | "phoneVerified",
     value: boolean
@@ -32,6 +37,8 @@ interface Step5Props {
 export default function Step5Contact({
   name,
   email,
+  country,
+  countryCode,
   phone,
   emailVerified,
   phoneVerified,
@@ -44,7 +51,7 @@ export default function Step5Contact({
   const [phoneCodeSent, setPhoneCodeSent] = useState(false);
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const isPhoneValid = /^\+?[\d\s-]{10,}$/.test(phone);
+  const isPhoneValid = /^[\d\s-]{7,}$/.test(phone);
 
   const handleSendEmailCode = async () => {
     if (!isEmailValid) return;
@@ -82,10 +89,13 @@ export default function Step5Contact({
 
     setPhoneLoading(true);
     try {
+      // Combine country code and phone number
+      const fullPhoneNumber = `${countryCode}${phone.replace(/[\s-]/g, '')}`;
+
       const response = await fetch("/api/send-phone-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ phone: fullPhoneNumber }),
       });
 
       if (!response.ok) {
@@ -111,10 +121,13 @@ export default function Step5Contact({
 
     setPhoneLoading(true);
     try {
+      // Combine country code and phone number
+      const fullPhoneNumber = `${countryCode}${phone.replace(/[\s-]/g, '')}`;
+
       const response = await fetch("/api/verify-phone-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, code: phoneCode }),
+        body: JSON.stringify({ phone: fullPhoneNumber, code: phoneCode }),
       });
 
       if (!response.ok) {
@@ -174,7 +187,7 @@ export default function Step5Contact({
             <Input
               id="name"
               value={name}
-              onChange={(e) => onContactChange(e.target.value, email, phone)}
+              onChange={(e) => onContactChange(e.target.value, email, country, countryCode, phone)}
               placeholder="John Doe"
               className="border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b]"
             />
@@ -195,7 +208,7 @@ export default function Step5Contact({
                   type="email"
                   value={email}
                   onChange={(e) =>
-                    onContactChange(name, e.target.value, phone)
+                    onContactChange(name, e.target.value, country, countryCode, phone)
                   }
                   placeholder="john@example.com"
                   className="flex-grow border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b]"
@@ -224,6 +237,33 @@ export default function Step5Contact({
             </div>
           </div>
 
+          {/* Country Selector */}
+          <div>
+            <Label htmlFor="country" className="flex items-center gap-2 mb-2 md:mb-3 text-xs md:text-sm font-semibold text-gray-900">
+              <div className="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+                <Globe className="w-3 h-3 md:w-4 md:h-4 text-white" strokeWidth={2} />
+              </div>
+              Country
+            </Label>
+            <Select
+              id="country"
+              value={country}
+              onChange={(e) => {
+                const selectedCountry = COUNTRIES.find(c => c.name === e.target.value);
+                if (selectedCountry) {
+                  onContactChange(name, email, selectedCountry.name, selectedCountry.code, phone);
+                }
+              }}
+              className="border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b]"
+            >
+              {COUNTRIES.map((c) => (
+                <option key={c.name} value={c.name}>
+                  {c.flag} {c.name} ({c.code})
+                </option>
+              ))}
+            </Select>
+          </div>
+
           {/* Phone with Verification */}
           <div>
             <Label htmlFor="phone" className="flex items-center gap-2 mb-2 md:mb-3 text-xs md:text-sm font-semibold text-gray-900">
@@ -234,14 +274,17 @@ export default function Step5Contact({
             </Label>
             <div className="space-y-2 md:space-y-3">
               <div className="flex gap-2">
+                <div className="flex-shrink-0 flex items-center px-3 py-2 bg-gray-100 border border-gray-200 rounded-md text-sm md:text-sm font-medium text-gray-700">
+                  {countryCode}
+                </div>
                 <Input
                   id="phone"
                   type="tel"
                   value={phone}
                   onChange={(e) =>
-                    onContactChange(name, email, e.target.value)
+                    onContactChange(name, email, country, countryCode, e.target.value)
                   }
-                  placeholder="+1 (555) 123-4567"
+                  placeholder="555 123 4567"
                   className="flex-grow border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b]"
                   disabled={phoneVerified}
                 />

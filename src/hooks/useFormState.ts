@@ -12,6 +12,8 @@ export function useFormState() {
     features: [],
     name: "",
     email: "",
+    country: "United States",
+    countryCode: "+1",
     phone: "",
     emailVerified: false,
     phoneVerified: false,
@@ -45,9 +47,11 @@ export function useFormState() {
   const updateContactInfo = (
     name: string,
     email: string,
+    country: string,
+    countryCode: string,
     phone: string
   ) => {
-    setFormData((prev) => ({ ...prev, name, email, phone }));
+    setFormData((prev) => ({ ...prev, name, email, country, countryCode, phone }));
   };
 
   const updateVerificationStatus = (

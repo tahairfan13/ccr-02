@@ -131,7 +131,8 @@ export default function Home() {
         contact: {
           name: formData.name,
           email: formData.email,
-          phone_number: formData.phone,
+          country: formData.country,
+          phone_number: `${formData.countryCode} ${formData.phone}`,
         },
       };
 
@@ -214,6 +215,8 @@ export default function Home() {
               <Step5Contact
                 name={formData.name}
                 email={formData.email}
+                country={formData.country}
+                countryCode={formData.countryCode}
                 phone={formData.phone}
                 emailVerified={formData.emailVerified}
                 phoneVerified={formData.phoneVerified}
