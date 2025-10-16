@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -34,6 +34,55 @@ export default function Home() {
 
   const [isGeneratingFeatures, setIsGeneratingFeatures] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const initEstimateSent = useRef(false);
+
+  // Send init_estimates when Step 5 is rendered (after Step 4 completion)
+  useEffect(() => {
+    if (currentStep === 5 && !initEstimateSent.current) {
+      // Mark as sent to prevent duplicate calls
+      initEstimateSent.current = true;
+
+      // Use setTimeout to ensure Step 5 renders first
+      setTimeout(() => {
+        sendInitEstimate();
+      }, 100);
+    }
+  }, [currentStep]);
+
+  const sendInitEstimate = async () => {
+    try {
+      const payload = {
+        applicationTypes: formData.applicationTypes,
+        projectScale: formData.projectScale,
+        description: formData.description,
+        contact: {
+          name: formData.name,
+          email: formData.email,
+          country: formData.country,
+          phone_number: `${formData.countryCode} ${formData.phone}`,
+        },
+      };
+
+      console.log("Sending init estimate:", payload);
+
+      const response = await fetch("https://crm.tecaudex.com/api/v1/init_estimates", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        console.error("Failed to send init estimate:", response.status);
+      } else {
+        console.log("Init estimate sent successfully");
+      }
+    } catch (error) {
+      console.error("Error sending init estimate:", error);
+      // Silently fail - don't show error to user
+    }
+  };
 
   const canProceed = () => {
     switch (currentStep) {
