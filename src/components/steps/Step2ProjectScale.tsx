@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ProjectScale } from "@/types";
-import { Rocket, TrendingUp, Building2 } from "lucide-react";
+import { Rocket, TrendingUp, Building2, Clock, DollarSign, Users, Zap } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 interface ScaleOption {
@@ -13,6 +13,9 @@ interface ScaleOption {
   features: string[];
   gradient: string;
   timeline: string;
+  bestFor: string;
+  budget: string;
+  teamSize: string;
 }
 
 const scaleOptions: ScaleOption[] = [
@@ -26,25 +29,29 @@ const scaleOptions: ScaleOption[] = [
       "Basic UI/UX design",
       "Essential functionality",
       "Quick time to market",
-      "Cost-effective approach",
     ],
     gradient: "from-green-500 to-emerald-500",
     timeline: "2-4 months",
+    bestFor: "Startups validating ideas, proof of concepts, quick market entry",
+    budget: "$5K - $40K",
+    teamSize: "Small team (2-4 developers)",
   },
   {
     scale: "mid",
-    title: "Mid-Level",
-    description: "Feature-Rich Application",
+    title: "Mid-Scale",
+    description: "Production-Ready Application",
     icon: <TrendingUp className="w-8 h-8" />,
     features: [
       "Extended feature set",
       "Custom UI/UX design",
       "Third-party integrations",
-      "Enhanced user experience",
       "Scalable architecture",
     ],
     gradient: "from-blue-500 to-cyan-500",
     timeline: "4-8 months",
+    bestFor: "Growing businesses, established products, competitive markets",
+    budget: "$50K - $150K",
+    teamSize: "Medium team (5-10 developers)",
   },
   {
     scale: "enterprise",
@@ -55,11 +62,13 @@ const scaleOptions: ScaleOption[] = [
       "Complete feature suite",
       "Premium UI/UX design",
       "Advanced integrations",
-      "High security standards",
-      "Enterprise-grade infrastructure",
+      "Enterprise-grade security",
     ],
     gradient: "from-purple-500 to-pink-500",
     timeline: "8+ months",
+    bestFor: "Large corporations, complex systems, mission-critical applications",
+    budget: "$150K+",
+    teamSize: "Large team (10+ developers)",
   },
 ];
 
@@ -73,7 +82,7 @@ export default function Step2ProjectScale({
   onSelectScale,
 }: Step2Props) {
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 py-2 md:py-0">
+    <div className="w-full max-w-4xl mx-auto px-4 py-2 md:py-0">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -87,11 +96,11 @@ export default function Step2ProjectScale({
           Select Project Scale
         </h2>
         <p className="text-sm md:text-base text-gray-600 font-normal max-w-2xl">
-          Choose the level that best matches your project needs and budget
+          Choose the development scope that matches your goals and timeline
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-5">
         {scaleOptions.map((option, index) => {
           const isSelected = selectedScale === option.scale;
 
@@ -100,11 +109,11 @@ export default function Step2ProjectScale({
               key={option.scale}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+              transition={{ duration: 0.3, delay: index * 0.08 }}
             >
               <Card
                 className={`
-                  group relative cursor-pointer transition-all duration-200 h-full
+                  group relative cursor-pointer transition-all duration-200
                   hover:shadow-md
                   ${
                     isSelected
@@ -114,53 +123,77 @@ export default function Step2ProjectScale({
                 `}
                 onClick={() => onSelectScale(option.scale)}
               >
-                <div className="p-4 md:p-7 flex flex-col h-full">
-                  {/* Icon with gradient background */}
-                  <div className="mb-3 md:mb-5">
+                <div className="p-4 md:p-6">
+                  {/* Icon and Title */}
+                  <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
                     <div
                       className={`
-                        w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-gradient-to-br ${option.gradient}
-                        flex items-center justify-center text-white
-                        shadow-lg mb-2 md:mb-4 transition-transform duration-200
+                        w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br ${option.gradient}
+                        flex items-center justify-center text-white flex-shrink-0
+                        shadow-lg transition-transform duration-200
                         ${isSelected ? "scale-105 shadow-xl" : "group-hover:scale-105"}
                       `}
                     >
-                      <div className="scale-75 md:scale-100">
+                      <div className="scale-75 md:scale-90">
                         {option.icon}
                       </div>
                     </div>
 
-                    <div className="mb-2">
-                      <h3 className="text-lg md:text-2xl font-bold text-gray-900">{option.title}</h3>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base md:text-xl font-bold text-gray-900 mb-1">
+                        {option.title}
+                      </h3>
                       <p className="text-xs md:text-sm text-gray-600">
                         {option.description}
                       </p>
                     </div>
                   </div>
 
-                  {/* Features list */}
-                  <div className="flex-grow">
-                    <ul className="space-y-2 md:space-y-3">
-                      {option.features.map((feature, idx) => (
-                        <motion.li
-                          key={idx}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.1 + idx * 0.05 }}
-                          className="flex items-start gap-2"
-                        >
-                          <div
-                            className={`
-                              w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0
-                              bg-gradient-to-r ${option.gradient}
-                            `}
-                          />
-                          <span className="text-xs md:text-sm text-gray-600 leading-relaxed">
-                            {feature}
-                          </span>
-                        </motion.li>
-                      ))}
-                    </ul>
+                  {/* Key Info Badges */}
+                  <div className="grid grid-cols-2 gap-2 mb-3 md:mb-4">
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <Clock className="w-3.5 h-3.5 text-gray-500" strokeWidth={2} />
+                      <span className="text-gray-700 font-medium">{option.timeline}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <DollarSign className="w-3.5 h-3.5 text-gray-500" strokeWidth={2} />
+                      <span className="text-gray-700 font-medium">{option.budget}</span>
+                    </div>
+                  </div>
+
+                  {/* Best For */}
+                  <div className="mb-3 md:mb-4 p-2.5 md:p-3 rounded-lg bg-gray-50 border border-gray-100">
+                    <div className="flex items-start gap-2">
+                      <Zap className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#ed1a3b] flex-shrink-0 mt-0.5" strokeWidth={2} />
+                      <div>
+                        <p className="text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
+                          Best For
+                        </p>
+                        <p className="text-xs md:text-sm text-gray-700 leading-snug">
+                          {option.bestFor}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Features */}
+                  <div className="space-y-1.5 md:space-y-2">
+                    {option.features.map((feature, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-start gap-2"
+                      >
+                        <div
+                          className={`
+                            w-1 h-1 md:w-1.5 md:h-1.5 rounded-full mt-1.5 md:mt-2 flex-shrink-0
+                            bg-gradient-to-r ${option.gradient}
+                          `}
+                        />
+                        <span className="text-xs md:text-sm text-gray-600 leading-relaxed">
+                          {feature}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </Card>

@@ -173,10 +173,10 @@ export default function Home() {
     <div className="h-screen md:min-h-screen bg-background flex flex-col md:block">
       <Header />
 
-      <main className="flex-1 flex flex-col min-h-0 md:block md:pb-20">
+      <main className="flex-1 flex flex-col min-h-0 md:block md:pb-20 relative">
         <ProgressIndicator currentStep={currentStep} />
 
-        <div className="flex-1 overflow-y-auto md:overflow-visible pb-4 md:pb-0 md:mt-8 md:mb-12 relative"
+        <div className="flex-1 overflow-y-auto md:overflow-visible pb-20 md:pb-0 md:mt-8 md:mb-12 relative"
              style={{
                WebkitOverflowScrolling: 'touch',
                scrollbarWidth: 'none',
@@ -236,9 +236,9 @@ export default function Home() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex-shrink-0 w-full md:w-auto"
+          className="fixed md:static bottom-0 left-0 right-0 md:w-auto z-50"
         >
-          <div className="max-w-4xl mx-auto px-4 flex items-center justify-between gap-3 md:gap-4 py-4 md:py-0 md:mb-8 bg-white md:bg-transparent border-t md:border-t-0 border-gray-200 md:border-0 shadow-[0_-4px_12px_-2px_rgba(0,0,0,0.08)] md:shadow-none"
+          <div className="max-w-4xl mx-auto px-4 flex items-center justify-between gap-3 md:gap-4 py-4 md:py-0 md:mb-8 bg-white md:bg-transparent border-t md:border-t-0 border-gray-200 md:border-0 shadow-[0_-4px_12px_-2px_rgba(0,0,0,0.08)] md:shadow-none backdrop-blur-sm md:backdrop-blur-none"
                style={{
                  paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
                  paddingTop: 'max(1rem, env(safe-area-inset-top))'
