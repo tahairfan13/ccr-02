@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProgressIndicator from "@/components/ProgressIndicator";
@@ -16,6 +17,7 @@ import { useFormState } from "@/hooks/useFormState";
 import { ArrowRight, ArrowLeft, Send, Loader2 } from "lucide-react";
 
 export default function Home() {
+  const router = useRouter();
   const {
     currentStep,
     formData,
@@ -156,16 +158,20 @@ export default function Home() {
       console.log("Submission successful:", result);
 
       toast.success("🎉 Estimate Submitted Successfully!", {
-        description: "Thank you! Your project estimate has been sent to your email. Our sales team will contact you within 24 hours to discuss your requirements.",
-        duration: 6000,
+        description: "Redirecting to confirmation page...",
+        duration: 2000,
       });
+
+      // Redirect to thank you page after a brief delay
+      setTimeout(() => {
+        router.push("/thank-you");
+      }, 1500);
     } catch (error: any) {
       console.error("Error submitting form:", error);
       toast.error("❌ Submission Failed", {
         description: error.message || "We couldn't submit your request. Please try again or contact us at hello@tecaudex.com",
         duration: 5000,
       });
-    } finally {
       setIsSubmitting(false);
     }
   };
