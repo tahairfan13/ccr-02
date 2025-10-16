@@ -139,7 +139,7 @@ export default function Home() {
       console.log("Submitting data:", payload);
 
       // Submit to actual API endpoint
-      const response = await fetch("https:/crm.tecaudex.com/api/v1/submit_estimate", {
+      const response = await fetch("https://crm.tecaudex.com/api/v1/submit_estimate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
