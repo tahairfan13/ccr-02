@@ -51,10 +51,17 @@ export default function Home() {
 
   const sendInitEstimate = async () => {
     try {
+      const selectedFeatures = formData.features.filter((f) => f.selected);
+      const totalHours = selectedFeatures.reduce((sum, f) => sum + f.hours, 0);
+
       const payload = {
         applicationTypes: formData.applicationTypes,
         projectScale: formData.projectScale,
         description: formData.description,
+        features: selectedFeatures,
+        totalHours,
+        estimatedCost: totalHours * 30,
+        hourlyRate: 30,
         contact: {
           name: formData.name,
           email: formData.email,
