@@ -357,7 +357,7 @@ export default function Step5Contact({
                     <Button
                       onClick={handleVerifyPhone}
                       disabled={phoneCode.length !== 6 || phoneLoading}
-                      className="bg-[#ed1a3b] hover:bg-[#d11632]"
+                      className="bg-[#ed1a3b] hover:bg-[#d11632] text-white"
                     >
                       {phoneLoading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
