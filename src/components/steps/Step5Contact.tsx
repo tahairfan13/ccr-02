@@ -176,7 +176,7 @@ export default function Step5Contact({
               value={name}
               onChange={(e) => onContactChange(e.target.value, email, phone)}
               placeholder="John Doe"
-              className="text-sm md:text-base border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b]"
+              className="border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b]"
             />
           </div>
 
@@ -198,7 +198,7 @@ export default function Step5Contact({
                     onContactChange(name, e.target.value, phone)
                   }
                   placeholder="john@example.com"
-                  className="text-base flex-grow border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b]"
+                  className="flex-grow border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b]"
                   disabled={emailVerified}
                 />
                 {!emailVerified && (
@@ -242,7 +242,7 @@ export default function Step5Contact({
                     onContactChange(name, email, e.target.value)
                   }
                   placeholder="+1 (555) 123-4567"
-                  className="text-sm md:text-base flex-grow border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b]"
+                  className="flex-grow border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b]"
                   disabled={phoneVerified}
                 />
                 {!phoneVerified && (

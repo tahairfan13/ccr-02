@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
@@ -12,6 +12,13 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Tecaudex Cost Calculator - AI-Powered Project Estimates",
   description: "Get accurate development cost estimates for your tech project. AI-powered analysis for web, mobile, blockchain, and AI applications.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

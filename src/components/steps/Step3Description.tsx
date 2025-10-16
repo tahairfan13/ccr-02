@@ -64,7 +64,7 @@ export default function Step3Description({
                   value={description}
                   onChange={(e) => onDescriptionChange(e.target.value)}
                   placeholder="Example: I want to build a mobile fitness app that helps users track workouts, monitor nutrition, and connect with friends..."
-                  className="min-h-[120px] md:min-h-[280px] text-sm md:text-base resize-none border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b] transition-all rounded-lg"
+                  className="min-h-[120px] md:min-h-[280px] resize-none border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b] transition-all rounded-lg"
                 />
 
                 <div className="flex items-center justify-between mt-2 md:mt-4 pt-2 md:pt-4 border-t border-gray-100">
