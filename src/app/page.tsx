@@ -73,7 +73,7 @@ export default function Home() {
 
       console.log("Sending init estimate:", payload);
 
-      const response = await fetch("https://c265a543ee9e.ngrok-free.app/api/v1/init_estimates", {
+      const response = await fetch("https://crm.tecaudex.com/api/v1/init_estimates", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -215,7 +215,7 @@ export default function Home() {
       console.log("Submitting data:", payload);
 
       // Submit to actual API endpoint
-      const response = await fetch("https://c265a543ee9e.ngrok-free.app/api/v1/submit_estimate", {
+      const response = await fetch("https://crm.tecaudex.com/api/v1/submit_estimate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
