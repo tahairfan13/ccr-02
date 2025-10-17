@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { useFormState } from "@/hooks/useFormState";
 import { ArrowRight, ArrowLeft, Send, Loader2 } from "lucide-react";
 import { fbPixelEvent } from "@/lib/fbPixel";
+import { sendGoogleChatNotification } from "@/lib/googleChatWebhook";
 
 export default function Home() {
   const router = useRouter();
@@ -86,6 +87,27 @@ export default function Home() {
       } else {
         console.log("Init estimate sent successfully");
       }
+
+      // Send INCOMPLETE notification to Google Chat when user reaches Step 5
+      const minCost = totalHours * 0.8 * 30;
+      const maxCost = totalHours * 1.3 * 30;
+
+      await sendGoogleChatNotification({
+        name: formData.name,
+        email: formData.email,
+        country: formData.country,
+        phone: formData.phone,
+        countryCode: formData.countryCode,
+        applicationType: formData.applicationTypes,
+        projectScale: formData.projectScale,
+        description: formData.description,
+        totalHours,
+        estimatedCost: {
+          min: minCost,
+          max: maxCost,
+        },
+        isComplete: false,
+      });
     } catch (error) {
       console.error("Error sending init estimate:", error);
       // Silently fail - don't show error to user
@@ -236,6 +258,27 @@ export default function Home() {
         content_name: 'Cost Calculator Form',
         value: totalHours * 30,
         currency: 'USD',
+      });
+
+      // Send COMPLETE notification to Google Chat after successful submission
+      const minCost = totalHours * 0.8 * 30;
+      const maxCost = totalHours * 1.3 * 30;
+
+      await sendGoogleChatNotification({
+        name: formData.name,
+        email: formData.email,
+        country: formData.country,
+        phone: formData.phone,
+        countryCode: formData.countryCode,
+        applicationType: formData.applicationTypes,
+        projectScale: formData.projectScale,
+        description: formData.description,
+        totalHours,
+        estimatedCost: {
+          min: minCost,
+          max: maxCost,
+        },
+        isComplete: true,
       });
 
       toast.success("🎉 Estimate Submitted Successfully!", {
