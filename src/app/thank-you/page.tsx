@@ -6,12 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { fbPixelEvent } from "@/lib/fbPixel";
 
 export default function ThankYouPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Optional: Confetti effect or celebration animation can be added here
+    // Track successful conversion on thank you page
+    fbPixelEvent.custom('ThankYouPageView', {
+      content_name: 'Thank You Page',
+    });
   }, []);
 
   return (

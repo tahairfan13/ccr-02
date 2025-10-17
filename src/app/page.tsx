@@ -15,6 +15,7 @@ import Step5Contact from "@/components/steps/Step5Contact";
 import { Button } from "@/components/ui/button";
 import { useFormState } from "@/hooks/useFormState";
 import { ArrowRight, ArrowLeft, Send, Loader2 } from "lucide-react";
+import { fbPixelEvent } from "@/lib/fbPixel";
 
 export default function Home() {
   const router = useRouter();
@@ -72,7 +73,7 @@ export default function Home() {
 
       console.log("Sending init estimate:", payload);
 
-      const response = await fetch("https://crm.tecaudex.com/api/v1/init_estimates", {
+      const response = await fetch("https://c265a543ee9e.ngrok-free.app/api/v1/init_estimates", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -114,11 +115,28 @@ export default function Home() {
   };
 
   const handleNext = async () => {
+    // Track step completion
+    fbPixelEvent.custom('StepCompleted', {
+      step_number: currentStep,
+      step_name: getStepName(currentStep),
+    });
+
     if (currentStep === 4 && formData.features.length === 0) {
       // Generate features after step 4 (contact info)
       await generateFeatures();
     }
     nextStep();
+  };
+
+  const getStepName = (step: number) => {
+    switch (step) {
+      case 1: return 'Application Type';
+      case 2: return 'Project Scale';
+      case 3: return 'Description';
+      case 4: return 'Contact Info';
+      case 5: return 'Feature Selection';
+      default: return 'Unknown';
+    }
   };
 
   const generateFeatures = async () => {
@@ -197,7 +215,7 @@ export default function Home() {
       console.log("Submitting data:", payload);
 
       // Submit to actual API endpoint
-      const response = await fetch("https://crm.tecaudex.com/api/v1/submit_estimate", {
+      const response = await fetch("https://c265a543ee9e.ngrok-free.app/api/v1/submit_estimate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -212,6 +230,13 @@ export default function Home() {
 
       const result = await response.json();
       console.log("Submission successful:", result);
+
+      // Track successful lead generation
+      fbPixelEvent.lead({
+        content_name: 'Cost Calculator Form',
+        value: totalHours * 30,
+        currency: 'USD',
+      });
 
       toast.success("🎉 Estimate Submitted Successfully!", {
         description: "Redirecting to confirmation page...",
