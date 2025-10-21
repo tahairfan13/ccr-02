@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { useFormState } from "@/hooks/useFormState";
 import { ArrowRight, ArrowLeft, Send, Loader2 } from "lucide-react";
 import { fbPixelEvent } from "@/lib/fbPixel";
+import clarityEvent from "@/lib/msClarity";
 import { sendGoogleChatNotification } from "@/lib/googleChatWebhook";
 
 export default function Home() {
@@ -137,11 +138,30 @@ export default function Home() {
   };
 
   const handleNext = async () => {
-    // Track step completion
+    const stepName = getStepName(currentStep);
+
+    // Track step completion with Facebook Pixel
     fbPixelEvent.custom('StepCompleted', {
       step_number: currentStep,
-      step_name: getStepName(currentStep),
+      step_name: stepName,
     });
+
+    // Track step completion with Microsoft Clarity
+    clarityEvent.stepCompleted(currentStep, stepName);
+
+    // Set custom tags for segmentation based on step data
+    if (currentStep === 1 && formData.applicationTypes.length > 0) {
+      clarityEvent.setTag('app_types', formData.applicationTypes.join(', '));
+    } else if (currentStep === 2 && formData.projectScale) {
+      clarityEvent.setTag('project_scale', formData.projectScale);
+    } else if (currentStep === 3) {
+      const wordCount = formData.description.trim().split(/\s+/).filter(Boolean).length;
+      clarityEvent.setTag('description_words', wordCount);
+    } else if (currentStep === 4) {
+      clarityEvent.setTag('user_country', formData.country);
+      clarityEvent.setTag('user_name', formData.name);
+      clarityEvent.identify(formData.email);
+    }
 
     if (currentStep === 4 && formData.features.length === 0) {
       // Generate features after step 4 (contact info)
@@ -253,12 +273,26 @@ export default function Home() {
       const result = await response.json();
       console.log("Submission successful:", result);
 
-      // Track successful lead generation
+      // Track successful lead generation with Facebook Pixel
       fbPixelEvent.lead({
         content_name: 'Cost Calculator Form',
         value: totalHours * 30,
         currency: 'USD',
       });
+
+      // Track form submission with Microsoft Clarity
+      clarityEvent.formSubmitted({
+        applicationTypes: formData.applicationTypes.join(', '),
+        projectScale: formData.projectScale,
+        totalHours,
+        estimatedCost: totalHours * 30,
+        featuresCount: selectedFeatures.length,
+      });
+
+      // Set final tags for conversion tracking
+      clarityEvent.setTag('total_hours', totalHours);
+      clarityEvent.setTag('estimated_cost', totalHours * 30);
+      clarityEvent.setTag('features_selected', selectedFeatures.length);
 
       // Send COMPLETE notification to Google Chat after successful submission
       const minCost = totalHours * 0.8 * 30;
@@ -292,6 +326,10 @@ export default function Home() {
       }, 1500);
     } catch (error: any) {
       console.error("Error submitting form:", error);
+
+      // Track submission error with Clarity
+      clarityEvent.error('form_submission_error', error.message || 'Unknown error');
+
       toast.error("❌ Submission Failed", {
         description: error.message || "We couldn't submit your request. Please try again or contact us at hello@tecaudex.com",
         duration: 5000,

@@ -19,6 +19,7 @@ import {
   Info,
 } from "lucide-react";
 import { COUNTRIES } from "@/constants/countries";
+import clarityEvent from "@/lib/msClarity";
 
 interface Step5Props {
   name: string;
@@ -102,6 +103,10 @@ export default function Step5Contact({
 
       // Email is valid, mark as verified (no code needed for bounce check)
       onVerificationChange("emailVerified", true);
+
+      // Track email verification with Clarity
+      clarityEvent.trackEvent('email_verified', { email });
+
       toast.success("Email validated successfully!", {
         description: "Your email address has been verified.",
       });
@@ -134,6 +139,10 @@ export default function Step5Contact({
       }
 
       setPhoneCodeSent(true);
+
+      // Track phone code sent with Clarity
+      clarityEvent.trackEvent('phone_code_sent', { country, countryCode });
+
       toast.success("Verification code sent!", {
         description: "Check your phone for a 6-digit code.",
       });
@@ -166,6 +175,11 @@ export default function Step5Contact({
       }
 
       onVerificationChange("phoneVerified", true);
+
+      // Track phone verification with Clarity
+      clarityEvent.phoneVerified('SMS');
+      clarityEvent.setTag('phone_country', country);
+
       toast.success("Phone verified successfully!", {
         description: "Your phone number has been confirmed.",
       });

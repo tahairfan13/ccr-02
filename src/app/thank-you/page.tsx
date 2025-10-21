@@ -7,15 +7,21 @@ import { Card } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { fbPixelEvent } from "@/lib/fbPixel";
+import clarityEvent from "@/lib/msClarity";
 
 export default function ThankYouPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Track successful conversion on thank you page
+    // Track successful conversion on thank you page with Facebook Pixel
     fbPixelEvent.custom('ThankYouPageView', {
       content_name: 'Thank You Page',
     });
+
+    // Track thank you page view with Microsoft Clarity
+    clarityEvent.pageView('Thank You');
+    clarityEvent.setTag('conversion', 'completed');
+    clarityEvent.upgrade('successful_submission');
   }, []);
 
   return (

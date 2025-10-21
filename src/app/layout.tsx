@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import FacebookPixel from "@/components/FacebookPixel";
+import MicrosoftClarity from "@/components/MicrosoftClarity";
 import "./globals.css";
 
 const inter = Inter({
@@ -31,6 +32,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} antialiased`}>
         <FacebookPixel />
+        <MicrosoftClarity />
         {children}
         <Toaster position="top-right" richColors />
       </body>
