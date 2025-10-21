@@ -15,8 +15,6 @@ export function useFormState() {
     country: "United States",
     countryCode: "+1",
     phone: "",
-    emailVerified: false,
-    phoneVerified: false,
   });
 
   const updateApplicationTypes = (types: ApplicationType[]) => {
@@ -54,13 +52,6 @@ export function useFormState() {
     setFormData((prev) => ({ ...prev, name, email, country, countryCode, phone }));
   };
 
-  const updateVerificationStatus = (
-    field: "emailVerified" | "phoneVerified",
-    value: boolean
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
   const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 5));
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
   const goToStep = (step: number) => setCurrentStep(step);
@@ -74,7 +65,6 @@ export function useFormState() {
     updateFeatures,
     toggleFeature,
     updateContactInfo,
-    updateVerificationStatus,
     nextStep,
     prevStep,
     goToStep,
