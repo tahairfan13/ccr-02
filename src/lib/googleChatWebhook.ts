@@ -12,6 +12,7 @@ interface LeadData {
     min: number;
     max: number;
   };
+  exactCost?: number;
   isComplete: boolean;
 }
 
@@ -29,8 +30,10 @@ export async function sendGoogleChatNotification(data: LeadData): Promise<void> 
     // Format application types
     const appTypes = data.applicationType.join(", ");
 
-    // Format project name from description (first few words)
-    const projectName = data.description.split(" ").slice(0, 3).join(" ") + (data.description.split(" ").length > 3 ? "..." : "");
+    // Use exact cost if provided, otherwise show range
+    const costDisplay = data.exactCost
+      ? `$${data.exactCost.toLocaleString()}`
+      : `$${data.estimatedCost.min.toLocaleString()} - $${data.estimatedCost.max.toLocaleString()}`;
 
     const message = {
       text: `${statusEmoji} Sales Lead Alert`,
@@ -44,23 +47,23 @@ export async function sendGoogleChatNotification(data: LeadData): Promise<void> 
           widgets: [
             {
               textParagraph: {
-                text: `<b>🎯 Project Details:</b><br>• <b>Type:</b> ${appTypes}<br>• <b>Project:</b> ${projectName}<br>• <b>Estimated Hours:</b> ${minHours.toFixed(1)}-${maxHours.toFixed(1)}<br>• <b>Estimated Cost:</b> $${data.estimatedCost.min.toLocaleString()} - $${data.estimatedCost.max.toLocaleString()}`
+                text: `<b>👤 Client Information:</b><br>• <b>Name:</b> ${data.name}<br>• <b>Email:</b> ${data.email}<br>• <b>Phone:</b> ${data.countryCode} ${data.phone} ✅ Verified<br>• <b>Region:</b> ${data.country}`
               }
             },
             {
               textParagraph: {
-                text: `<b>📧 Contact Information:</b><br>• <b>Email:</b> ${data.email}<br>• <b>Phone:</b> ${data.countryCode} ${data.phone}<br>• <b>WhatsApp:</b> ✅ Ready to Message`
+                text: `<b>🎯 Project Details:</b><br>• <b>Type:</b> ${appTypes}<br>• <b>Scale:</b> ${data.projectScale || 'Not specified'}<br>• <b>Description:</b> ${data.description}`
               }
             },
             {
               textParagraph: {
-                text: `<b>📍 Location:</b> ${data.country}`
+                text: `<b>💰 Cost Estimate:</b><br>• <b>Total Hours:</b> ${data.totalHours} hrs<br>• <b>Hours Range:</b> ${minHours.toFixed(1)}-${maxHours.toFixed(1)} hrs<br>• <b>Exact Cost:</b> ${costDisplay}`
               }
             },
             {
               textParagraph: {
                 text: data.isComplete
-                  ? `<b>💡 Status:</b> CCR Report has been sent to the client. Ready for follow-up!`
+                  ? `<b>💡 Status:</b> CCR Report has been sent to the client. Ready for follow-up!<br>• <b>WhatsApp:</b> ✅ Ready to Message`
                   : `<b>💡 Status:</b> Lead is filling out the form. Initial estimate in progress.`
               }
             }

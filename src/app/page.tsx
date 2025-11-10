@@ -92,6 +92,7 @@ export default function Home() {
       // Send INCOMPLETE notification to Google Chat when user reaches Step 5
       const minCost = totalHours * 0.8 * 30;
       const maxCost = totalHours * 1.3 * 30;
+      const exactCost = totalHours * 30;
 
       await sendGoogleChatNotification({
         name: formData.name,
@@ -107,6 +108,7 @@ export default function Home() {
           min: minCost,
           max: maxCost,
         },
+        exactCost,
         isComplete: false,
       });
     } catch (error) {
@@ -297,6 +299,7 @@ export default function Home() {
       // Send COMPLETE notification to Google Chat after successful submission
       const minCost = totalHours * 0.8 * 30;
       const maxCost = totalHours * 1.3 * 30;
+      const exactCost = totalHours * 30;
 
       await sendGoogleChatNotification({
         name: formData.name,
@@ -312,6 +315,7 @@ export default function Home() {
           min: minCost,
           max: maxCost,
         },
+        exactCost,
         isComplete: true,
       });
 
