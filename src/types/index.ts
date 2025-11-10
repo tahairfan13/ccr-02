@@ -21,6 +21,8 @@ export interface FormData {
   country: string;
   countryCode: string;
   phone: string;
+  emailVerified: boolean;
+  phoneVerified: boolean;
 }
 
 export interface VerificationState {

@@ -30,6 +30,7 @@ export default function Home() {
     updateFeatures,
     toggleFeature,
     updateContactInfo,
+    updateVerificationStatus,
     nextStep,
     prevStep,
   } = useFormState();
@@ -124,12 +125,10 @@ export default function Home() {
         const wordCount = formData.description.trim().split(/\s+/).filter(Boolean).length;
         return wordCount >= 10;
       case 4:
-        const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email);
-        const isPhoneValid = /^[\d\s-]{7,}$/.test(formData.phone);
         return (
           formData.name.trim().length > 0 &&
-          isEmailValid &&
-          isPhoneValid
+          formData.emailVerified &&
+          formData.phoneVerified
         );
       case 5:
         return formData.features.some((f) => f.selected);
@@ -387,7 +386,10 @@ export default function Home() {
                 country={formData.country}
                 countryCode={formData.countryCode}
                 phone={formData.phone}
+                emailVerified={formData.emailVerified}
+                phoneVerified={formData.phoneVerified}
                 onContactChange={updateContactInfo}
+                onVerificationChange={updateVerificationStatus}
               />
             )}
 
