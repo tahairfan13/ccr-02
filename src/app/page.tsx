@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -14,12 +14,29 @@ import Step4Features from "@/components/steps/Step4Features";
 import Step5Contact from "@/components/steps/Step5Contact";
 import { Button } from "@/components/ui/button";
 import { useFormState } from "@/hooks/useFormState";
+import { useTrafficSource } from "@/hooks/useTrafficSource";
 import { ArrowRight, ArrowLeft, Send, Loader2 } from "lucide-react";
 import { fbPixelEvent } from "@/lib/fbPixel";
 import clarityEvent from "@/lib/msClarity";
 import { sendGoogleChatNotification } from "@/lib/googleChatWebhook";
 
 export default function Home() {
+  return (
+    <Suspense fallback={<HomeLoading />}>
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+function HomeLoading() {
+  return (
+    <div className="h-screen flex items-center justify-center bg-background">
+      <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+    </div>
+  );
+}
+
+function HomeContent() {
   const router = useRouter();
   const {
     currentStep,
@@ -34,6 +51,7 @@ export default function Home() {
     nextStep,
     prevStep,
   } = useFormState();
+  const trafficSource = useTrafficSource();
 
   const [isGeneratingFeatures, setIsGeneratingFeatures] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,6 +88,14 @@ export default function Home() {
           email: formData.email,
           country: formData.country,
           phone_number: `${formData.countryCode} ${formData.phone}`,
+        },
+        trafficSource: {
+          source: trafficSource.source,
+          utmSource: trafficSource.utmSource,
+          utmMedium: trafficSource.utmMedium,
+          utmCampaign: trafficSource.utmCampaign,
+          gclid: trafficSource.gclid,
+          fbclid: trafficSource.fbclid,
         },
       };
 
@@ -110,6 +136,12 @@ export default function Home() {
         },
         exactCost,
         isComplete: false,
+        trafficSource: {
+          source: trafficSource.source,
+          utmSource: trafficSource.utmSource,
+          utmMedium: trafficSource.utmMedium,
+          utmCampaign: trafficSource.utmCampaign,
+        },
       });
     } catch (error) {
       console.error("Error sending init estimate:", error);
@@ -254,6 +286,14 @@ export default function Home() {
           country: formData.country,
           phone_number: `${formData.countryCode} ${formData.phone}`,
         },
+        trafficSource: {
+          source: trafficSource.source,
+          utmSource: trafficSource.utmSource,
+          utmMedium: trafficSource.utmMedium,
+          utmCampaign: trafficSource.utmCampaign,
+          gclid: trafficSource.gclid,
+          fbclid: trafficSource.fbclid,
+        },
       };
 
       console.log("Submitting data:", payload);
@@ -317,6 +357,12 @@ export default function Home() {
         },
         exactCost,
         isComplete: true,
+        trafficSource: {
+          source: trafficSource.source,
+          utmSource: trafficSource.utmSource,
+          utmMedium: trafficSource.utmMedium,
+          utmCampaign: trafficSource.utmCampaign,
+        },
       });
 
       toast.success("🎉 Estimate Submitted Successfully!", {

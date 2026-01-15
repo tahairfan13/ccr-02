@@ -1,3 +1,12 @@
+type TrafficSource = "meta" | "google" | "direct";
+
+interface TrafficSourceData {
+  source: TrafficSource;
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+}
+
 interface LeadData {
   name: string;
   email: string;
@@ -14,6 +23,7 @@ interface LeadData {
   };
   exactCost?: number;
   isComplete: boolean;
+  trafficSource?: TrafficSourceData;
 }
 
 const WEBHOOK_URL = "https://chat.googleapis.com/v1/spaces/AAAACFWW_6g/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=zQ8eDGM5G-ABlY0M7ZW2ZPqfhZWRTClqzcNINlsDLb0";
@@ -29,6 +39,24 @@ export async function sendGoogleChatNotification(data: LeadData): Promise<void> 
 
     // Format application types
     const appTypes = data.applicationType.join(", ");
+
+    // Format traffic source
+    const getSourceLabel = (source: TrafficSource): string => {
+      switch (source) {
+        case "meta": return "Meta Ads (Facebook/Instagram)";
+        case "google": return "Google Ads";
+        case "direct": return "Direct";
+        default: return "Unknown";
+      }
+    };
+
+    const trafficSourceLabel = data.trafficSource
+      ? getSourceLabel(data.trafficSource.source)
+      : "Not tracked";
+
+    const trafficSourceEmoji = data.trafficSource?.source === "meta" ? "📘"
+      : data.trafficSource?.source === "google" ? "🔍"
+      : "🔗";
 
     // Use exact cost if provided, otherwise show range
     const costDisplay = data.exactCost
@@ -48,6 +76,11 @@ export async function sendGoogleChatNotification(data: LeadData): Promise<void> 
             {
               textParagraph: {
                 text: `<b>👤 Client Information:</b><br>• <b>Name:</b> ${data.name}<br>• <b>Email:</b> ${data.email}<br>• <b>Phone:</b> ${data.countryCode} ${data.phone} ✅ Verified<br>• <b>Region:</b> ${data.country}`
+              }
+            },
+            {
+              textParagraph: {
+                text: `<b>${trafficSourceEmoji} Traffic Source:</b> ${trafficSourceLabel}${data.trafficSource?.utmCampaign ? `<br>• <b>Campaign:</b> ${data.trafficSource.utmCampaign}` : ''}${data.trafficSource?.utmMedium ? `<br>• <b>Medium:</b> ${data.trafficSource.utmMedium}` : ''}`
               }
             },
             {
