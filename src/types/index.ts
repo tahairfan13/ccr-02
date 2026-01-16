@@ -23,6 +23,11 @@ export interface FormData {
   phone: string;
   emailVerified: boolean;
   phoneVerified: boolean;
+  trafficSource?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  referrer?: string;
 }
 
 export interface VerificationState {

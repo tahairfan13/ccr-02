@@ -17,6 +17,7 @@ export function useFormState() {
     phone: "",
     emailVerified: false,
     phoneVerified: false,
+    trafficSource: "Direct",
   });
 
   const updateApplicationTypes = (types: ApplicationType[]) => {
@@ -61,6 +62,23 @@ export function useFormState() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const updateTrafficSource = (
+    trafficSource: string,
+    utmSource?: string,
+    utmMedium?: string,
+    utmCampaign?: string,
+    referrer?: string
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      trafficSource,
+      utmSource,
+      utmMedium,
+      utmCampaign,
+      referrer,
+    }));
+  };
+
   const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 5));
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
   const goToStep = (step: number) => setCurrentStep(step);
@@ -75,6 +93,7 @@ export function useFormState() {
     toggleFeature,
     updateContactInfo,
     updateVerificationStatus,
+    updateTrafficSource,
     nextStep,
     prevStep,
     goToStep,
