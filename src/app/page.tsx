@@ -14,7 +14,7 @@ import Step4Features from "@/components/steps/Step4Features";
 import Step5Contact from "@/components/steps/Step5Contact";
 import { Button } from "@/components/ui/button";
 import { useFormState } from "@/hooks/useFormState";
-import { useTrafficSource, TrafficSourceData } from "@/hooks/useTrafficSource";
+import { useTrafficSource, TrafficSourceData, getSourcebusterData } from "@/hooks/useTrafficSource";
 import { ArrowRight, ArrowLeft, Send, Loader2 } from "lucide-react";
 import { fbPixelEvent } from "@/lib/fbPixel";
 import clarityEvent from "@/lib/msClarity";
@@ -86,17 +86,77 @@ function HomeContent() {
       // Mark as sent to prevent duplicate calls
       initEstimateSent.current = true;
 
-      // Use setTimeout to ensure Step 5 renders first
+      // Wait 500ms to ensure sourcebuster has initialized and traffic source is captured
       setTimeout(() => {
         sendInitEstimate();
-      }, 100);
+      }, 500);
     }
   }, [currentStep]);
+
+  // Helper to get the best available traffic source (with fallback to sourcebuster cookies)
+  const getBestTrafficSource = () => {
+    // If we already have a non-Direct source from React state, use it
+    if (trafficSource.source !== "Direct") {
+      return {
+        source: trafficSource.source,
+        utmSource: trafficSource.utmSource,
+        utmMedium: trafficSource.utmMedium,
+        utmCampaign: trafficSource.utmCampaign,
+        gclid: trafficSource.gclid,
+        fbclid: trafficSource.fbclid,
+      };
+    }
+    
+    // Fallback: try to read directly from sourcebuster cookies
+    const sbData = getSourcebusterData();
+    if (sbData?.current) {
+      const src = sbData.current.src;
+      const mdm = sbData.current.mdm;
+      const cmp = sbData.current.cmp;
+      
+      // Detect source name from sourcebuster data
+      let source = "Direct";
+      if (src && src !== "(direct)" && src !== "(none)") {
+        const srcLower = src.toLowerCase();
+        if (srcLower.includes("facebook") || srcLower.includes("fb") || srcLower.includes("instagram") || srcLower.includes("meta")) {
+          source = "Meta Ads";
+        } else if (srcLower.includes("google") && (mdm === "cpc" || mdm === "ppc" || mdm === "paid")) {
+          source = "Google Ads";
+        } else if (mdm === "organic") {
+          source = "Organic";
+        } else {
+          source = src;
+        }
+      }
+      
+      return {
+        source,
+        utmSource: src !== "(none)" ? src : null,
+        utmMedium: mdm !== "(none)" ? mdm : null,
+        utmCampaign: cmp !== "(none)" ? cmp : null,
+        gclid: trafficSource.gclid,
+        fbclid: trafficSource.fbclid,
+      };
+    }
+    
+    // Final fallback: return current state
+    return {
+      source: trafficSource.source,
+      utmSource: trafficSource.utmSource,
+      utmMedium: trafficSource.utmMedium,
+      utmCampaign: trafficSource.utmCampaign,
+      gclid: trafficSource.gclid,
+      fbclid: trafficSource.fbclid,
+    };
+  };
 
   const sendInitEstimate = async () => {
     try {
       const selectedFeatures = formData.features.filter((f) => f.selected);
       const totalHours = selectedFeatures.reduce((sum, f) => sum + f.hours, 0);
+      const currentTrafficSource = getBestTrafficSource();
+      
+      console.log("📤 Sending init estimate with traffic source:", currentTrafficSource);
 
       const payload = {
         applicationTypes: formData.applicationTypes,
@@ -112,14 +172,7 @@ function HomeContent() {
           country: formData.country,
           phone_number: `${formData.countryCode} ${formData.phone}`,
         },
-        trafficSource: {
-          source: trafficSource.source,
-          utmSource: trafficSource.utmSource,
-          utmMedium: trafficSource.utmMedium,
-          utmCampaign: trafficSource.utmCampaign,
-          gclid: trafficSource.gclid,
-          fbclid: trafficSource.fbclid,
-        },
+        trafficSource: currentTrafficSource,
       };
 
       console.log("Sending init estimate:", payload);
@@ -159,12 +212,7 @@ function HomeContent() {
         },
         exactCost,
         isComplete: false,
-        trafficSource: {
-          source: trafficSource.source,
-          utmSource: trafficSource.utmSource,
-          utmMedium: trafficSource.utmMedium,
-          utmCampaign: trafficSource.utmCampaign,
-        },
+        trafficSource: currentTrafficSource,
       });
     } catch (error) {
       console.error("Error sending init estimate:", error);
@@ -290,6 +338,7 @@ function HomeContent() {
     if (!canProceed()) return;
 
     setIsSubmitting(true);
+    const currentTrafficSource = getBestTrafficSource();
 
     try {
       const selectedFeatures = formData.features.filter((f) => f.selected);
@@ -309,17 +358,10 @@ function HomeContent() {
           country: formData.country,
           phone_number: `${formData.countryCode} ${formData.phone}`,
         },
-        trafficSource: {
-          source: trafficSource.source,
-          utmSource: trafficSource.utmSource,
-          utmMedium: trafficSource.utmMedium,
-          utmCampaign: trafficSource.utmCampaign,
-          gclid: trafficSource.gclid,
-          fbclid: trafficSource.fbclid,
-        },
+        trafficSource: currentTrafficSource,
       };
 
-      console.log("Submitting data:", payload);
+      console.log("📤 Submitting data with traffic source:", currentTrafficSource);
 
       // Submit to actual API endpoint
       const response = await fetch("https://crm.tecaudex.com/api/v1/submit_estimate", {
@@ -380,12 +422,7 @@ function HomeContent() {
         },
         exactCost,
         isComplete: true,
-        trafficSource: {
-          source: trafficSource.source,
-          utmSource: trafficSource.utmSource,
-          utmMedium: trafficSource.utmMedium,
-          utmCampaign: trafficSource.utmCampaign,
-        },
+        trafficSource: currentTrafficSource,
       });
 
       toast.success("🎉 Estimate Submitted Successfully!", {
