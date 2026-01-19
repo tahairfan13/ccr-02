@@ -14,7 +14,7 @@ import Step4Features from "@/components/steps/Step4Features";
 import Step5Contact from "@/components/steps/Step5Contact";
 import { Button } from "@/components/ui/button";
 import { useFormState } from "@/hooks/useFormState";
-import { useTrafficSource } from "@/hooks/useTrafficSource";
+import { useTrafficSource, TrafficSourceData } from "@/hooks/useTrafficSource";
 import { ArrowRight, ArrowLeft, Send, Loader2 } from "lucide-react";
 import { fbPixelEvent } from "@/lib/fbPixel";
 import clarityEvent from "@/lib/msClarity";
@@ -56,6 +56,29 @@ function HomeContent() {
   const [isGeneratingFeatures, setIsGeneratingFeatures] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const initEstimateSent = useRef(false);
+  const trafficSourceTagged = useRef(false);
+
+  // Tag Clarity session with traffic source info when detected
+  useEffect(() => {
+    if (trafficSource.source !== "Direct" && !trafficSourceTagged.current) {
+      trafficSourceTagged.current = true;
+      
+      // Set traffic source tags in Clarity for session segmentation
+      clarityEvent.setTag('traffic_source', trafficSource.source);
+      if (trafficSource.utmSource) clarityEvent.setTag('utm_source', trafficSource.utmSource);
+      if (trafficSource.utmMedium) clarityEvent.setTag('utm_medium', trafficSource.utmMedium);
+      if (trafficSource.utmCampaign) clarityEvent.setTag('utm_campaign', trafficSource.utmCampaign);
+      if (trafficSource.gclid) clarityEvent.setTag('has_gclid', 'true');
+      if (trafficSource.fbclid) clarityEvent.setTag('has_fbclid', 'true');
+      
+      console.log("🏷️ Tagged Clarity session with traffic source:", trafficSource.source);
+    } else if (trafficSource.source === "Direct" && !trafficSourceTagged.current) {
+      // Also tag direct traffic
+      trafficSourceTagged.current = true;
+      clarityEvent.setTag('traffic_source', 'Direct');
+      console.log("🏷️ Tagged Clarity session with traffic source: Direct");
+    }
+  }, [trafficSource]);
 
   // Send init_estimates when Step 5 is rendered (after Step 4 completion)
   useEffect(() => {

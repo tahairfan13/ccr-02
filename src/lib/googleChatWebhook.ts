@@ -1,7 +1,5 @@
-type TrafficSource = "meta" | "google" | "direct";
-
 interface TrafficSourceData {
-  source: TrafficSource;
+  source: string;
   utmSource: string | null;
   utmMedium: string | null;
   utmCampaign: string | null;
@@ -40,23 +38,45 @@ export async function sendGoogleChatNotification(data: LeadData): Promise<void> 
     // Format application types
     const appTypes = data.applicationType.join(", ");
 
-    // Format traffic source
-    const getSourceLabel = (source: TrafficSource): string => {
-      switch (source) {
-        case "meta": return "Meta Ads (Facebook/Instagram)";
-        case "google": return "Google Ads";
-        case "direct": return "Direct";
-        default: return "Unknown";
+    // Format traffic source - handle various formats
+    const getSourceLabel = (source: string): string => {
+      const sourceLower = source.toLowerCase();
+      
+      if (sourceLower.includes("meta") || sourceLower.includes("facebook") || sourceLower.includes("fb") || sourceLower.includes("instagram")) {
+        return "📘 Meta Ads (Facebook/Instagram)";
       }
+      if (sourceLower.includes("google") && (sourceLower.includes("ads") || sourceLower.includes("cpc") || sourceLower.includes("ppc"))) {
+        return "🔍 Google Ads";
+      }
+      if (sourceLower.includes("organic")) {
+        return "🌱 Organic Search";
+      }
+      if (sourceLower.includes("linkedin")) {
+        return "💼 LinkedIn";
+      }
+      if (sourceLower.includes("twitter") || sourceLower.includes("x.com")) {
+        return "🐦 Twitter/X";
+      }
+      if (sourceLower.includes("tiktok")) {
+        return "🎵 TikTok";
+      }
+      if (sourceLower.includes("email") || sourceLower.includes("newsletter")) {
+        return "📧 Email";
+      }
+      if (sourceLower.includes("referral")) {
+        return `🔗 ${source}`;
+      }
+      if (sourceLower === "direct" || sourceLower === "unknown") {
+        return "🔗 Direct";
+      }
+      
+      // Return the source as-is if unrecognized
+      return `🔗 ${source}`;
     };
 
     const trafficSourceLabel = data.trafficSource
       ? getSourceLabel(data.trafficSource.source)
-      : "Not tracked";
-
-    const trafficSourceEmoji = data.trafficSource?.source === "meta" ? "📘"
-      : data.trafficSource?.source === "google" ? "🔍"
-      : "🔗";
+      : "🔗 Not tracked";
 
     // Use exact cost if provided, otherwise show range
     const costDisplay = data.exactCost
@@ -80,7 +100,7 @@ export async function sendGoogleChatNotification(data: LeadData): Promise<void> 
             },
             {
               textParagraph: {
-                text: `<b>${trafficSourceEmoji} Traffic Source:</b> ${trafficSourceLabel}${data.trafficSource?.utmCampaign ? `<br>• <b>Campaign:</b> ${data.trafficSource.utmCampaign}` : ''}${data.trafficSource?.utmMedium ? `<br>• <b>Medium:</b> ${data.trafficSource.utmMedium}` : ''}`
+                text: `<b>Traffic Source:</b> ${trafficSourceLabel}${data.trafficSource?.utmCampaign ? `<br>• <b>Campaign:</b> ${data.trafficSource.utmCampaign}` : ''}${data.trafficSource?.utmMedium ? `<br>• <b>Medium:</b> ${data.trafficSource.utmMedium}` : ''}${data.trafficSource?.utmSource ? `<br>• <b>Source:</b> ${data.trafficSource.utmSource}` : ''}`
               }
             },
             {
