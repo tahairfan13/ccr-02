@@ -95,6 +95,45 @@ function detectSourceName(
 }
 
 // ============================================
+// GCLID Persistent Storage (cookie + localStorage)
+// Attribution model: last-touch (overwrite)
+// ============================================
+const GCLID_COOKIE_NAME = "_tecaudex_gclid";
+const GCLID_LS_KEY = "tecaudex_gclid";
+const GCLID_EXPIRY_DAYS = 90;
+
+function saveGclid(gclid: string): void {
+  try {
+    const expires = new Date(Date.now() + GCLID_EXPIRY_DAYS * 24 * 60 * 60 * 1000).toUTCString();
+    const secure = window.location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = `${GCLID_COOKIE_NAME}=${encodeURIComponent(gclid)}; path=/; max-age=${GCLID_EXPIRY_DAYS * 24 * 60 * 60}; expires=${expires}; SameSite=Lax${secure}`;
+    localStorage.setItem(GCLID_LS_KEY, gclid);
+  } catch (e) {
+    console.error("Failed to save gclid:", e);
+  }
+}
+
+export function getStoredGclid(): string | null {
+  try {
+    const match = document.cookie.match(new RegExp(`(?:^|; )${GCLID_COOKIE_NAME}=([^;]*)`));
+    if (match) return decodeURIComponent(match[1]);
+    return localStorage.getItem(GCLID_LS_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+
+function clearGclid(): void {
+  try {
+    document.cookie = `${GCLID_COOKIE_NAME}=; path=/; max-age=0`;
+    document.cookie = `${GCLID_COOKIE_NAME}=; path=/; domain=${window.location.hostname}; max-age=0`;
+    localStorage.removeItem(GCLID_LS_KEY);
+  } catch {
+    // silently ignore
+  }
+}
+
+// ============================================
 // Main Hook - Uses sourcebuster for tracking
 // ============================================
 export function useTrafficSource(): TrafficSourceData {
@@ -150,7 +189,11 @@ export function useTrafficSource(): TrafficSourceData {
     const utmCampaign = searchParams?.get("utm_campaign") || current.cmp || null;
     const utmContent = searchParams?.get("utm_content") || current.cnt || null;
     const utmTerm = searchParams?.get("utm_term") || current.trm || null;
-    const gclid = searchParams?.get("gclid") || null;
+    const urlGclid = searchParams?.get("gclid") || null;
+    if (urlGclid) {
+      saveGclid(urlGclid);
+    }
+    const gclid = urlGclid || getStoredGclid();
     const fbclid = searchParams?.get("fbclid") || null;
     
     // Detect the friendly source name
@@ -231,6 +274,9 @@ export function clearTrafficSource(): void {
       document.cookie = `${name}=; path=/; max-age=0`;
       document.cookie = `${name}=; path=/; domain=${window.location.hostname}; max-age=0`;
     });
+    
+    // Clear GCLID persistent storage
+    clearGclid();
     
     // Also clear old storage keys
     localStorage.removeItem("tecaudex_traffic_source");

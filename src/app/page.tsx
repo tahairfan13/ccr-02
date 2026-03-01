@@ -14,7 +14,7 @@ import Step4Features from "@/components/steps/Step4Features";
 import Step5Contact from "@/components/steps/Step5Contact";
 import { Button } from "@/components/ui/button";
 import { useFormState } from "@/hooks/useFormState";
-import { useTrafficSource, TrafficSourceData, getSourcebusterData } from "@/hooks/useTrafficSource";
+import { useTrafficSource, TrafficSourceData, getSourcebusterData, getStoredGclid } from "@/hooks/useTrafficSource";
 import { ArrowRight, ArrowLeft, Send, Loader2 } from "lucide-react";
 import { fbPixelEvent } from "@/lib/fbPixel";
 import clarityEvent from "@/lib/msClarity";
@@ -95,6 +95,8 @@ function HomeContent() {
 
   // Helper to get the best available traffic source (with fallback to sourcebuster cookies)
   const getBestTrafficSource = () => {
+    const persistedGclid = trafficSource.gclid || getStoredGclid();
+
     // If we already have a non-Direct source from React state, use it
     if (trafficSource.source !== "Direct") {
       return {
@@ -102,7 +104,7 @@ function HomeContent() {
         utmSource: trafficSource.utmSource,
         utmMedium: trafficSource.utmMedium,
         utmCampaign: trafficSource.utmCampaign,
-        gclid: trafficSource.gclid,
+        gclid: persistedGclid,
         fbclid: trafficSource.fbclid,
       };
     }
@@ -128,24 +130,28 @@ function HomeContent() {
           source = src;
         }
       }
+
+      if (persistedGclid && source === "Direct") {
+        source = "Google Ads";
+      }
       
       return {
         source,
         utmSource: src !== "(none)" ? src : null,
         utmMedium: mdm !== "(none)" ? mdm : null,
         utmCampaign: cmp !== "(none)" ? cmp : null,
-        gclid: trafficSource.gclid,
+        gclid: persistedGclid,
         fbclid: trafficSource.fbclid,
       };
     }
     
     // Final fallback: return current state
     return {
-      source: trafficSource.source,
+      source: persistedGclid ? "Google Ads" : trafficSource.source,
       utmSource: trafficSource.utmSource,
       utmMedium: trafficSource.utmMedium,
       utmCampaign: trafficSource.utmCampaign,
-      gclid: trafficSource.gclid,
+      gclid: persistedGclid,
       fbclid: trafficSource.fbclid,
     };
   };
@@ -172,6 +178,7 @@ function HomeContent() {
           country: formData.country,
           phone_number: `${formData.countryCode} ${formData.phone}`,
         },
+        gclid: currentTrafficSource.gclid,
         trafficSource: currentTrafficSource,
       };
 
@@ -358,6 +365,7 @@ function HomeContent() {
           country: formData.country,
           phone_number: `${formData.countryCode} ${formData.phone}`,
         },
+        gclid: currentTrafficSource.gclid,
         trafficSource: currentTrafficSource,
       };
 
