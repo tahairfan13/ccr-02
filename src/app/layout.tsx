@@ -15,6 +15,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Tecaudex Cost Calculator - AI-Powered Project Estimates",
   description: "Get accurate development cost estimates for your tech project. AI-powered analysis for web, mobile, blockchain, and AI applications.",
+  icons: {
+    icon: "/tecaudex.svg",
+  },
 };
 
 export const viewport: Viewport = {
