@@ -12,7 +12,7 @@ export default function Footer() {
     >
       <div className="max-w-7xl mx-auto text-center">
         <p className="text-xs md:text-sm text-gray-400">
-          © 2025 Tecaudex - Transforming Startups | All Rights Reserved
+          © 2026 Tecaudex - Transforming Startups | All Rights Reserved
         </p>
       </div>
     </motion.footer>
