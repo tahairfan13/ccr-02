@@ -55,6 +55,19 @@ export default function Step5Contact({
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isPhoneValid = /^[\d\s-]{7,}$/.test(phone);
+  const isTecaudexEmail = email.toLowerCase().endsWith("@tecaudex.com");
+
+  // Auto-verify phone for @tecaudex.com emails once email is verified and phone is valid
+  useEffect(() => {
+    if (isTecaudexEmail && emailVerified && isPhoneValid && !phoneVerified) {
+      onVerificationChange("phoneVerified", true);
+      clarityEvent.phoneVerified('auto_tecaudex');
+      clarityEvent.setTag('phone_country', country);
+      toast.success("Phone auto-verified!", {
+        description: "Tecaudex team members skip phone verification.",
+      });
+    }
+  }, [isTecaudexEmail, emailVerified, isPhoneValid, phoneVerified]);
 
   // Auto-validate email with debounce
   useEffect(() => {
@@ -331,7 +344,7 @@ export default function Step5Contact({
                   className="flex-grow border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b]"
                   disabled={phoneVerified}
                 />
-                {!phoneVerified && (
+                {!phoneVerified && !isTecaudexEmail && (
                   <Button
                     onClick={handleSendPhoneCode}
                     disabled={!isPhoneValid || phoneLoading || phoneCodeSent}
@@ -354,7 +367,7 @@ export default function Step5Contact({
                 )}
               </div>
 
-              {phoneCodeSent && !phoneVerified && (
+              {phoneCodeSent && !phoneVerified && !isTecaudexEmail && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}

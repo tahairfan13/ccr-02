@@ -172,6 +172,10 @@ function HomeContent() {
         totalHours,
         estimatedCost: totalHours * 30,
         hourlyRate: 30,
+        name: formData.name,
+        email: formData.email,
+        country: formData.country,
+        phone_number: `${formData.countryCode} ${formData.phone}`,
         contact: {
           name: formData.name,
           email: formData.email,
