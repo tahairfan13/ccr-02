@@ -610,21 +610,6 @@ function HomeContent() {
         </motion.div>
       </main>
 
-      {/* CTA */}
-      <section className="w-full px-4 md:px-6 py-8 md:py-12 bg-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <a
-            href="https://www.tecaudex.com/contact-us"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-8 py-4 text-base md:text-lg font-bold text-white bg-gradient-to-r from-[#ed1a3b] to-[#d11632] hover:from-[#d11632] hover:to-[#b01228] rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95"
-          >
-            Get a Free Detailed Quote
-            <ExternalLink className="w-5 h-5" strokeWidth={2.5} />
-          </a>
-        </div>
-      </section>
-
       {/* What affects app development cost */}
       <section className="w-full px-4 md:px-6 py-10 md:py-16 bg-gray-50">
         <div className="max-w-5xl mx-auto">
@@ -706,6 +691,24 @@ function HomeContent() {
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="w-full px-4 md:px-6 py-10 md:py-14 bg-gray-50">
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-lg md:text-xl font-semibold text-gray-900 mb-4">
+            Ready to get started?
+          </p>
+          <a
+            href="https://www.tecaudex.com/contact-us"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-8 py-4 text-base md:text-lg font-bold text-white bg-gradient-to-r from-[#ed1a3b] to-[#d11632] hover:from-[#d11632] hover:to-[#b01228] rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95"
+          >
+            Get a Free Detailed Quote
+            <ExternalLink className="w-5 h-5" strokeWidth={2.5} />
+          </a>
         </div>
       </section>
 
