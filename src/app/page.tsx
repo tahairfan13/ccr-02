@@ -1,623 +1,50 @@
-"use client";
-
-import { useState, useEffect, useRef, Suspense } from "react";
-import { motion } from "framer-motion";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import ProgressIndicator from "@/components/ProgressIndicator";
-import Step1ApplicationType from "@/components/steps/Step1ApplicationType";
-import Step2ProjectScale from "@/components/steps/Step2ProjectScale";
-import Step3Description from "@/components/steps/Step3Description";
-import Step4Features from "@/components/steps/Step4Features";
-import Step5Contact from "@/components/steps/Step5Contact";
-import { Button } from "@/components/ui/button";
-import { useFormState } from "@/hooks/useFormState";
-import { useTrafficSource, TrafficSourceData, getSourcebusterData, getStoredGclid } from "@/hooks/useTrafficSource";
-import { ArrowRight, ArrowLeft, Send, Loader2, ExternalLink } from "lucide-react";
-import { fbPixelEvent } from "@/lib/fbPixel";
-import clarityEvent from "@/lib/msClarity";
-import { sendGoogleChatNotification } from "@/lib/googleChatWebhook";
+import Link from "next/link";
+import { ArrowRight, ExternalLink } from "lucide-react";
 
 export default function Home() {
   return (
-    <Suspense fallback={<HomeLoading />}>
-      <HomeContent />
-    </Suspense>
-  );
-}
-
-function HomeLoading() {
-  return (
-    <div className="h-screen flex items-center justify-center bg-background">
-      <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-    </div>
-  );
-}
-
-function HomeContent() {
-  const router = useRouter();
-  const {
-    currentStep,
-    formData,
-    updateApplicationTypes,
-    updateProjectScale,
-    updateDescription,
-    updateFeatures,
-    toggleFeature,
-    updateContactInfo,
-    updateVerificationStatus,
-    nextStep,
-    prevStep,
-  } = useFormState();
-  const trafficSource = useTrafficSource();
-
-  const [isGeneratingFeatures, setIsGeneratingFeatures] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const initEstimateSent = useRef(false);
-  const trafficSourceTagged = useRef(false);
-
-  // Tag Clarity session with traffic source info when detected
-  useEffect(() => {
-    if (trafficSource.source !== "Direct" && !trafficSourceTagged.current) {
-      trafficSourceTagged.current = true;
-      
-      // Set traffic source tags in Clarity for session segmentation
-      clarityEvent.setTag('traffic_source', trafficSource.source);
-      if (trafficSource.utmSource) clarityEvent.setTag('utm_source', trafficSource.utmSource);
-      if (trafficSource.utmMedium) clarityEvent.setTag('utm_medium', trafficSource.utmMedium);
-      if (trafficSource.utmCampaign) clarityEvent.setTag('utm_campaign', trafficSource.utmCampaign);
-      if (trafficSource.gclid) clarityEvent.setTag('has_gclid', 'true');
-      if (trafficSource.fbclid) clarityEvent.setTag('has_fbclid', 'true');
-      
-      console.log("🏷️ Tagged Clarity session with traffic source:", trafficSource.source);
-    } else if (trafficSource.source === "Direct" && !trafficSourceTagged.current) {
-      // Also tag direct traffic
-      trafficSourceTagged.current = true;
-      clarityEvent.setTag('traffic_source', 'Direct');
-      console.log("🏷️ Tagged Clarity session with traffic source: Direct");
-    }
-  }, [trafficSource]);
-
-  // Send init_estimates when Step 5 is rendered (after Step 4 completion)
-  useEffect(() => {
-    if (currentStep === 5 && !initEstimateSent.current) {
-      // Mark as sent to prevent duplicate calls
-      initEstimateSent.current = true;
-
-      // Wait 500ms to ensure sourcebuster has initialized and traffic source is captured
-      setTimeout(() => {
-        sendInitEstimate();
-      }, 500);
-    }
-  }, [currentStep]);
-
-  // Helper to get the best available traffic source (with fallback to sourcebuster cookies)
-  const getBestTrafficSource = () => {
-    const persistedGclid = trafficSource.gclid || getStoredGclid();
-
-    // If we already have a non-Direct source from React state, use it
-    if (trafficSource.source !== "Direct") {
-      return {
-        source: trafficSource.source,
-        utmSource: trafficSource.utmSource,
-        utmMedium: trafficSource.utmMedium,
-        utmCampaign: trafficSource.utmCampaign,
-        gclid: persistedGclid,
-        fbclid: trafficSource.fbclid,
-      };
-    }
-    
-    // Fallback: try to read directly from sourcebuster cookies
-    const sbData = getSourcebusterData();
-    if (sbData?.current) {
-      const src = sbData.current.src;
-      const mdm = sbData.current.mdm;
-      const cmp = sbData.current.cmp;
-      
-      // Detect source name from sourcebuster data
-      let source = "Direct";
-      if (src && src !== "(direct)" && src !== "(none)") {
-        const srcLower = src.toLowerCase();
-        if (srcLower.includes("facebook") || srcLower.includes("fb") || srcLower.includes("instagram") || srcLower.includes("meta")) {
-          source = "Meta Ads";
-        } else if (srcLower.includes("google") && (mdm === "cpc" || mdm === "ppc" || mdm === "paid")) {
-          source = "Google Ads";
-        } else if (mdm === "organic") {
-          source = "Organic";
-        } else {
-          source = src;
-        }
-      }
-
-      if (persistedGclid && source === "Direct") {
-        source = "Google Ads";
-      }
-      
-      return {
-        source,
-        utmSource: src !== "(none)" ? src : null,
-        utmMedium: mdm !== "(none)" ? mdm : null,
-        utmCampaign: cmp !== "(none)" ? cmp : null,
-        gclid: persistedGclid,
-        fbclid: trafficSource.fbclid,
-      };
-    }
-    
-    // Final fallback: return current state
-    return {
-      source: persistedGclid ? "Google Ads" : trafficSource.source,
-      utmSource: trafficSource.utmSource,
-      utmMedium: trafficSource.utmMedium,
-      utmCampaign: trafficSource.utmCampaign,
-      gclid: persistedGclid,
-      fbclid: trafficSource.fbclid,
-    };
-  };
-
-  const sendInitEstimate = async () => {
-    try {
-      const selectedFeatures = formData.features.filter((f) => f.selected);
-      const totalHours = selectedFeatures.reduce((sum, f) => sum + f.hours, 0);
-      const currentTrafficSource = getBestTrafficSource();
-      
-      console.log("📤 Sending init estimate with traffic source:", currentTrafficSource);
-
-      const payload = {
-        applicationTypes: formData.applicationTypes,
-        projectScale: formData.projectScale,
-        description: formData.description,
-        features: selectedFeatures,
-        totalHours,
-        estimatedCost: totalHours * 30,
-        hourlyRate: 30,
-        name: formData.name,
-        email: formData.email,
-        country: formData.country,
-        phone_number: `${formData.countryCode} ${formData.phone}`,
-        contact: {
-          name: formData.name,
-          email: formData.email,
-          country: formData.country,
-          phone_number: `${formData.countryCode} ${formData.phone}`,
-        },
-        gclid: currentTrafficSource.gclid,
-        trafficSource: currentTrafficSource,
-      };
-
-      console.log("Sending init estimate:", payload);
-
-      const response = await fetch("https://crm.tecaudex.com/api/v1/init_estimates", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        console.error("Failed to send init estimate:", response.status);
-      } else {
-        console.log("Init estimate sent successfully");
-      }
-
-      // Send INCOMPLETE notification to Google Chat when user reaches Step 5
-      const minCost = totalHours * 0.8 * 30;
-      const maxCost = totalHours * 1.3 * 30;
-      const exactCost = totalHours * 30;
-
-      await sendGoogleChatNotification({
-        name: formData.name,
-        email: formData.email,
-        country: formData.country,
-        phone: formData.phone,
-        countryCode: formData.countryCode,
-        applicationType: formData.applicationTypes,
-        projectScale: formData.projectScale,
-        description: formData.description,
-        totalHours,
-        estimatedCost: {
-          min: minCost,
-          max: maxCost,
-        },
-        exactCost,
-        isComplete: false,
-        trafficSource: currentTrafficSource,
-      });
-    } catch (error) {
-      console.error("Error sending init estimate:", error);
-      // Silently fail - don't show error to user
-    }
-  };
-
-  const canProceed = () => {
-    switch (currentStep) {
-      case 1:
-        return formData.applicationTypes.length > 0;
-      case 2:
-        return formData.projectScale !== null;
-      case 3:
-        const wordCount = formData.description.trim().split(/\s+/).filter(Boolean).length;
-        return wordCount >= 10;
-      case 4:
-        return (
-          formData.name.trim().length > 0 &&
-          formData.emailVerified &&
-          formData.phoneVerified
-        );
-      case 5:
-        return formData.features.some((f) => f.selected);
-      default:
-        return false;
-    }
-  };
-
-  const handleNext = async () => {
-    const stepName = getStepName(currentStep);
-
-    // Track step completion with Facebook Pixel
-    fbPixelEvent.custom('StepCompleted', {
-      step_number: currentStep,
-      step_name: stepName,
-    });
-
-    // Track step completion with Microsoft Clarity
-    clarityEvent.stepCompleted(currentStep, stepName);
-
-    // Set custom tags for segmentation based on step data
-    if (currentStep === 1 && formData.applicationTypes.length > 0) {
-      clarityEvent.setTag('app_types', formData.applicationTypes.join(', '));
-    } else if (currentStep === 2 && formData.projectScale) {
-      clarityEvent.setTag('project_scale', formData.projectScale);
-    } else if (currentStep === 3) {
-      const wordCount = formData.description.trim().split(/\s+/).filter(Boolean).length;
-      clarityEvent.setTag('description_words', wordCount);
-    } else if (currentStep === 4) {
-      clarityEvent.setTag('user_country', formData.country);
-      clarityEvent.setTag('user_name', formData.name);
-      clarityEvent.identify(formData.email);
-    }
-
-    if (currentStep === 4 && formData.features.length === 0) {
-      // Generate features after step 4 (contact info)
-      await generateFeatures();
-    }
-    nextStep();
-  };
-
-  const getStepName = (step: number) => {
-    switch (step) {
-      case 1: return 'Application Type';
-      case 2: return 'Project Scale';
-      case 3: return 'Description';
-      case 4: return 'Contact Info';
-      case 5: return 'Feature Selection';
-      default: return 'Unknown';
-    }
-  };
-
-  const generateFeatures = async () => {
-    setIsGeneratingFeatures(true);
-
-    try {
-      const response = await fetch("/api/generate-features", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          applicationTypes: formData.applicationTypes,
-          projectScale: formData.projectScale,
-          description: formData.description,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to generate features");
-      }
-
-      const data = await response.json();
-      updateFeatures(data.features);
-    } catch (error) {
-      console.error("Error generating features:", error);
-      // Fallback to example features on error
-      updateFeatures([
-        {
-          id: "1",
-          name: "User Authentication",
-          description: "Secure login and registration system with email verification",
-          hours: 40,
-          category: "Authentication",
-          selected: true,
-        },
-        {
-          id: "2",
-          name: "Dashboard",
-          description: "Main user dashboard with analytics and key metrics",
-          hours: 60,
-          category: "Core Features",
-          selected: true,
-        },
-      ]);
-    } finally {
-      setIsGeneratingFeatures(false);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!canProceed()) return;
-
-    setIsSubmitting(true);
-    const currentTrafficSource = getBestTrafficSource();
-
-    try {
-      const selectedFeatures = formData.features.filter((f) => f.selected);
-      const totalHours = selectedFeatures.reduce((sum, f) => sum + f.hours, 0);
-
-      const payload = {
-        applicationTypes: formData.applicationTypes,
-        projectScale: formData.projectScale,
-        description: formData.description,
-        features: selectedFeatures,
-        totalHours,
-        estimatedCost: totalHours * 30,
-        hourlyRate: 30,
-        contact: {
-          name: formData.name,
-          email: formData.email,
-          country: formData.country,
-          phone_number: `${formData.countryCode} ${formData.phone}`,
-        },
-        gclid: currentTrafficSource.gclid,
-        trafficSource: currentTrafficSource,
-      };
-
-      console.log("📤 Submitting data with traffic source:", currentTrafficSource);
-
-      // Submit to actual API endpoint
-      const response = await fetch("https://crm.tecaudex.com/api/v1/submit_estimate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
-        throw new Error(errorData.message || `Server error: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log("Submission successful:", result);
-
-      // Track successful lead generation with Facebook Pixel
-      fbPixelEvent.lead({
-        content_name: 'Cost Calculator Form',
-        value: totalHours * 30,
-        currency: 'USD',
-      });
-
-      // Track form submission with Microsoft Clarity
-      clarityEvent.formSubmitted({
-        applicationTypes: formData.applicationTypes.join(', '),
-        projectScale: formData.projectScale,
-        totalHours,
-        estimatedCost: totalHours * 30,
-        featuresCount: selectedFeatures.length,
-      });
-
-      // Set final tags for conversion tracking
-      clarityEvent.setTag('total_hours', totalHours);
-      clarityEvent.setTag('estimated_cost', totalHours * 30);
-      clarityEvent.setTag('features_selected', selectedFeatures.length);
-
-      // Send COMPLETE notification to Google Chat after successful submission
-      const minCost = totalHours * 0.8 * 30;
-      const maxCost = totalHours * 1.3 * 30;
-      const exactCost = totalHours * 30;
-
-      await sendGoogleChatNotification({
-        name: formData.name,
-        email: formData.email,
-        country: formData.country,
-        phone: formData.phone,
-        countryCode: formData.countryCode,
-        applicationType: formData.applicationTypes,
-        projectScale: formData.projectScale,
-        description: formData.description,
-        totalHours,
-        estimatedCost: {
-          min: minCost,
-          max: maxCost,
-        },
-        exactCost,
-        isComplete: true,
-        trafficSource: currentTrafficSource,
-      });
-
-      toast.success("🎉 Estimate Submitted Successfully!", {
-        description: "Redirecting to confirmation page...",
-        duration: 2000,
-      });
-
-      // Redirect to thank you page after a brief delay
-      setTimeout(() => {
-        router.push("/thank-you");
-      }, 1500);
-    } catch (error: any) {
-      console.error("Error submitting form:", error);
-
-      // Track submission error with Clarity
-      clarityEvent.error('form_submission_error', error.message || 'Unknown error');
-
-      toast.error("❌ Submission Failed", {
-        description: error.message || "We couldn't submit your request. Please try again or contact us at hello@tecaudex.com",
-        duration: 5000,
-      });
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       <Header />
 
-      {/* Hero: H1 + H2 + intro paragraph — visible above the fold on step 1 */}
-      {currentStep === 1 && (
-        <section className="w-full px-4 md:px-6 pt-6 pb-2 md:pt-10 md:pb-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-2 md:mb-3">
-              App Development Cost Calculator
-            </h1>
-            <h2 className="text-base md:text-xl text-gray-600 font-medium mb-4 md:mb-5">
-              Estimate your app development cost in 2 minutes — free and instant.
-            </h2>
-            <p className="text-sm md:text-base text-gray-600 leading-relaxed max-w-3xl mx-auto">
-              Building an app in the UK typically costs between £10,000 and £150,000+ depending on the
-              type, platform, and features. The cost to develop an app varies based on whether you need
-              iOS, Android, or a web app, the complexity of features, and whether you use a freelancer,
-              an agency, or a dedicated development company like Tecaudex. Use the calculator below to
-              get a realistic cost estimate for your specific project.
-            </p>
-          </div>
-        </section>
-      )}
-
-      <main className="flex-1 flex flex-col min-h-0 md:block md:pb-20 relative">
-        <ProgressIndicator currentStep={currentStep} />
-
-        <div className="flex-1 overflow-y-auto md:overflow-visible pb-20 md:pb-0 md:mt-8 md:mb-12 relative"
-             style={{
-               WebkitOverflowScrolling: 'touch',
-               scrollbarWidth: 'none',
-               msOverflowStyle: 'none'
-             }}>
-          <motion.div
-            key={currentStep}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className="md:animate-none"
+      {/* Hero */}
+      <section className="w-full px-4 md:px-6 pt-12 pb-8 md:pt-20 md:pb-14">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 md:mb-6 tracking-tight">
+            App Development Cost Calculator
+          </h1>
+          <h2 className="text-lg md:text-xl text-gray-500 font-medium mb-6 md:mb-8 max-w-2xl mx-auto">
+            Estimate your app development cost in 2 minutes — free and instant.
+          </h2>
+          <p className="text-sm md:text-base text-gray-600 leading-relaxed max-w-3xl mx-auto mb-8 md:mb-10">
+            Building an app in the UK typically costs between £10,000 and £150,000+ depending on the
+            type, platform, and features. The cost to develop an app varies based on whether you need
+            iOS, Android, or a web app, the complexity of features, and whether you use a freelancer,
+            an agency, or a dedicated development company like Tecaudex. Use our calculator to
+            get a realistic cost estimate for your specific project.
+          </p>
+          <Link
+            href="/calculate"
+            className="inline-flex items-center gap-2 px-8 py-4 text-base md:text-lg font-bold text-white bg-gradient-to-r from-[#ed1a3b] to-[#d11632] hover:from-[#d11632] hover:to-[#b01228] rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95"
           >
-            {currentStep === 1 && (
-              <Step1ApplicationType
-                selectedTypes={formData.applicationTypes}
-                onSelectType={updateApplicationTypes}
-              />
-            )}
-
-            {currentStep === 2 && (
-              <Step2ProjectScale
-                selectedScale={formData.projectScale}
-                onSelectScale={updateProjectScale}
-              />
-            )}
-
-            {currentStep === 3 && (
-              <Step3Description
-                description={formData.description}
-                onDescriptionChange={updateDescription}
-              />
-            )}
-
-            {currentStep === 4 && (
-              <Step5Contact
-                name={formData.name}
-                email={formData.email}
-                country={formData.country}
-                countryCode={formData.countryCode}
-                phone={formData.phone}
-                emailVerified={formData.emailVerified}
-                phoneVerified={formData.phoneVerified}
-                onContactChange={updateContactInfo}
-                onVerificationChange={updateVerificationStatus}
-              />
-            )}
-
-            {currentStep === 5 && (
-              <Step4Features
-                features={formData.features}
-                onToggleFeature={toggleFeature}
-                isLoading={isGeneratingFeatures}
-              />
-            )}
-          </motion.div>
+            Calculate Your App Cost
+            <ArrowRight className="w-5 h-5" strokeWidth={2.5} />
+          </Link>
         </div>
-
-        {/* Navigation Buttons - Fixed at bottom on mobile */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed md:static bottom-0 left-0 right-0 md:w-auto z-50"
-        >
-          <div className="max-w-4xl mx-auto px-4 flex items-center justify-between gap-3 md:gap-4 py-4 md:py-0 md:mb-8 bg-white md:bg-transparent border-t md:border-t-0 border-gray-200 md:border-0 shadow-[0_-4px_12px_-2px_rgba(0,0,0,0.08)] md:shadow-none backdrop-blur-sm md:backdrop-blur-none"
-               style={{
-                 paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
-                 paddingTop: 'max(1rem, env(safe-area-inset-top))'
-               }}>
-          <Button
-            variant="outline"
-            onClick={prevStep}
-            disabled={currentStep === 1 || isGeneratingFeatures || isSubmitting}
-            className="flex items-center gap-1.5 md:gap-2 px-4 py-3 md:px-6 md:py-3 text-sm md:text-base font-semibold border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all rounded-xl md:rounded-lg disabled:opacity-40 disabled:cursor-not-allowed shadow-sm active:scale-95 md:active:scale-100"
-          >
-            <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" strokeWidth={2.5} />
-            <span className="hidden sm:inline">Back</span>
-          </Button>
-
-          {currentStep < 5 ? (
-            <Button
-              onClick={handleNext}
-              disabled={!canProceed() || isGeneratingFeatures}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-3 text-sm md:text-base font-bold bg-gradient-to-r from-[#ed1a3b] to-[#d11632] md:bg-[#ed1a3b] hover:from-[#d11632] hover:to-[#b01228] md:hover:bg-[#d11632] text-white transition-all rounded-xl md:rounded-lg shadow-lg md:shadow-sm hover:shadow-xl disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:from-[#ed1a3b] disabled:hover:to-[#d11632] disabled:hover:bg-[#ed1a3b] active:scale-95 md:active:scale-100"
-            >
-              {isGeneratingFeatures ? (
-                <>
-                  <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" strokeWidth={2} />
-                  <span className="hidden sm:inline">AI Analyzing...</span>
-                  <span className="sm:hidden">Loading...</span>
-                </>
-              ) : (
-                <>
-                  <span className="font-bold">Continue</span>
-                  <ArrowRight className="w-5 h-5 md:w-5 md:h-5" strokeWidth={2.5} />
-                </>
-              )}
-            </Button>
-          ) : (
-            <Button
-              onClick={handleSubmit}
-              disabled={!canProceed() || isSubmitting}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-3 text-sm md:text-base font-bold bg-gradient-to-r from-green-600 to-green-700 md:bg-[#ed1a3b] hover:from-green-700 hover:to-green-800 md:hover:bg-[#d11632] text-white transition-all rounded-xl md:rounded-lg shadow-lg md:shadow-sm hover:shadow-xl disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:from-green-600 disabled:hover:to-green-700 disabled:hover:bg-[#ed1a3b] active:scale-95 md:active:scale-100"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-5 h-5 md:w-5 md:h-5 animate-spin" strokeWidth={2} />
-                  <span className="hidden sm:inline">Submitting...</span>
-                  <span className="sm:hidden">Sending...</span>
-                </>
-              ) : (
-                <>
-                  <span className="font-bold">Get Estimate</span>
-                  <Send className="w-5 h-5 md:w-5 md:h-5" strokeWidth={2.5} />
-                </>
-              )}
-            </Button>
-          )}
-          </div>
-        </motion.div>
-      </main>
+      </section>
 
       {/* What affects app development cost */}
-      <section className="w-full px-4 md:px-6 py-10 md:py-16 bg-gray-50">
+      <section className="w-full px-4 md:px-6 py-12 md:py-20 bg-gray-50">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-xl md:text-3xl font-bold text-gray-900 text-center mb-8 md:mb-12">
+          <h2 className="text-xl md:text-3xl font-bold text-gray-900 text-center mb-3 md:mb-4">
             What affects the cost to build an app?
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <p className="text-sm md:text-base text-gray-500 text-center mb-8 md:mb-12 max-w-2xl mx-auto">
+            Every project is unique. Here are the key factors that determine your final development cost.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
+            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
               <h3 className="font-semibold text-gray-900 mb-2">App type and platform</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
                 iOS, Android, or cross-platform (Flutter/React Native) apps each have different cost
@@ -625,28 +52,28 @@ function HomeContent() {
                 Android separately.
               </p>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
               <h3 className="font-semibold text-gray-900 mb-2">Features and complexity</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
                 A simple MVP with 3–5 screens costs far less than a full-featured marketplace or fintech
                 platform. Every feature adds development time.
               </p>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
               <h3 className="font-semibold text-gray-900 mb-2">Design requirements</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
                 Custom UI/UX design adds to the budget but significantly improves user retention. Basic
                 apps use templates; complex products need bespoke design.
               </p>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
               <h3 className="font-semibold text-gray-900 mb-2">Team location</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
                 UK-based agencies typically charge £80–£150/hr. Offshore teams with UK timezone alignment
                 (like Tecaudex) deliver the same quality at significantly lower rates.
               </p>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
               <h3 className="font-semibold text-gray-900 mb-2">Ongoing maintenance</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
                 Factor in 15–20% of your build cost annually for updates, hosting, and bug fixes.
@@ -656,15 +83,31 @@ function HomeContent() {
         </div>
       </section>
 
+      {/* Mid-page CTA */}
+      <section className="w-full px-4 md:px-6 py-10 md:py-14 bg-white">
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-lg md:text-xl font-semibold text-gray-900 mb-4">
+            Ready to see what your app will cost?
+          </p>
+          <Link
+            href="/calculate"
+            className="inline-flex items-center gap-2 px-8 py-4 text-base md:text-lg font-bold text-white bg-gradient-to-r from-[#ed1a3b] to-[#d11632] hover:from-[#d11632] hover:to-[#b01228] rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95"
+          >
+            Try the Free Calculator
+            <ArrowRight className="w-5 h-5" strokeWidth={2.5} />
+          </Link>
+        </div>
+      </section>
+
       {/* FAQ */}
-      <section className="w-full px-4 md:px-6 py-10 md:py-16 bg-white">
+      <section className="w-full px-4 md:px-6 py-12 md:py-20 bg-gray-50">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-xl md:text-3xl font-bold text-gray-900 text-center mb-8 md:mb-12">
             Frequently Asked Questions
           </h2>
-          <div className="space-y-6">
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">
+          <div className="space-y-5">
+            <div className="bg-white rounded-xl p-5 md:p-6 border border-gray-200 shadow-sm">
+              <h3 className="font-semibold text-gray-900 mb-2">
                 How much does it cost to make an app in the UK?
               </h3>
               <p className="text-sm text-gray-600 leading-relaxed">
@@ -672,8 +115,8 @@ function HomeContent() {
                 complex platforms. The exact cost depends on features, platform, and team.
               </p>
             </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">
+            <div className="bg-white rounded-xl p-5 md:p-6 border border-gray-200 shadow-sm">
+              <h3 className="font-semibold text-gray-900 mb-2">
                 How accurate is this cost calculator?
               </h3>
               <p className="text-sm text-gray-600 leading-relaxed">
@@ -681,8 +124,8 @@ function HomeContent() {
                 precise quote tailored to your requirements, book a free discovery call with our team.
               </p>
             </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">
+            <div className="bg-white rounded-xl p-5 md:p-6 border border-gray-200 shadow-sm">
+              <h3 className="font-semibold text-gray-900 mb-2">
                 How long does it take to build an app?
               </h3>
               <p className="text-sm text-gray-600 leading-relaxed">
@@ -694,21 +137,33 @@ function HomeContent() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="w-full px-4 md:px-6 py-10 md:py-14 bg-gray-50">
+      {/* Bottom CTA */}
+      <section className="w-full px-4 md:px-6 py-12 md:py-16 bg-white">
         <div className="max-w-4xl mx-auto text-center">
-          <p className="text-lg md:text-xl font-semibold text-gray-900 mb-4">
-            Ready to get started?
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
+            Want a precise quote instead?
+          </h2>
+          <p className="text-sm md:text-base text-gray-500 mb-6">
+            Talk to our team for a detailed estimate tailored to your project.
           </p>
-          <a
-            href="https://www.tecaudex.com/contact-us"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-8 py-4 text-base md:text-lg font-bold text-white bg-gradient-to-r from-[#ed1a3b] to-[#d11632] hover:from-[#d11632] hover:to-[#b01228] rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95"
-          >
-            Get a Free Detailed Quote
-            <ExternalLink className="w-5 h-5" strokeWidth={2.5} />
-          </a>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/calculate"
+              className="inline-flex items-center gap-2 px-8 py-4 text-base font-bold text-white bg-gradient-to-r from-[#ed1a3b] to-[#d11632] hover:from-[#d11632] hover:to-[#b01228] rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95"
+            >
+              Calculate Your App Cost
+              <ArrowRight className="w-5 h-5" strokeWidth={2.5} />
+            </Link>
+            <a
+              href="https://www.tecaudex.com/contact-us"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-8 py-4 text-base font-bold text-gray-700 bg-white border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 rounded-xl shadow-sm hover:shadow transition-all active:scale-95"
+            >
+              Get a Free Detailed Quote
+              <ExternalLink className="w-4 h-4" strokeWidth={2.5} />
+            </a>
+          </div>
         </div>
       </section>
 
