@@ -103,7 +103,7 @@ export default function Step4Features({
         className="mb-3 md:mb-12"
       >
         <div className="hidden md:inline-block px-3 py-1 rounded-md bg-gray-100 text-gray-600 text-sm font-medium mb-4">
-          Step 5 of 5
+          Step 4 of 5
         </div>
         <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
           <h2 className="text-lg md:text-3xl font-bold text-gray-900">

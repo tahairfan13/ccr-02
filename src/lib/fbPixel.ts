@@ -11,8 +11,8 @@ export interface EventParams {
 // Helper to safely import and use ReactPixel only on client side
 const getReactPixel = async () => {
   if (typeof window === 'undefined') return null;
-  const module = await import('react-facebook-pixel');
-  return module.default;
+  const pixelModule = await import('react-facebook-pixel');
+  return pixelModule.default;
 };
 
 /**

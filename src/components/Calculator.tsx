@@ -73,14 +73,7 @@ function CalculatorContent() {
     }
   }, [trafficSource]);
 
-  useEffect(() => {
-    if (currentStep === 5 && !initEstimateSent.current) {
-      initEstimateSent.current = true;
-      setTimeout(() => {
-        sendInitEstimate();
-      }, 500);
-    }
-  }, [currentStep]);
+  // initEstimate is now called inside handleSubmit instead of on step change
 
   const getBestTrafficSource = () => {
     const persistedGclid = trafficSource.gclid || getStoredGclid();
@@ -218,13 +211,13 @@ function CalculatorContent() {
         const wordCount = formData.description.trim().split(/\s+/).filter(Boolean).length;
         return wordCount >= 10;
       case 4:
+        return formData.features.some((f) => f.selected);
+      case 5:
         return (
           formData.name.trim().length > 0 &&
           formData.emailVerified &&
-          formData.phoneVerified
+          formData.phone.replace(/[\s-]/g, "").length >= 7
         );
-      case 5:
-        return formData.features.some((f) => f.selected);
       default:
         return false;
     }
@@ -248,12 +241,11 @@ function CalculatorContent() {
       const wordCount = formData.description.trim().split(/\s+/).filter(Boolean).length;
       clarityEvent.setTag('description_words', wordCount);
     } else if (currentStep === 4) {
-      clarityEvent.setTag('user_country', formData.country);
-      clarityEvent.setTag('user_name', formData.name);
-      clarityEvent.identify(formData.email);
+      const selectedCount = formData.features.filter(f => f.selected).length;
+      clarityEvent.setTag('features_selected_at_step', selectedCount);
     }
 
-    if (currentStep === 4 && formData.features.length === 0) {
+    if (currentStep === 3 && formData.features.length === 0) {
       await generateFeatures();
     }
     nextStep();
@@ -264,8 +256,8 @@ function CalculatorContent() {
       case 1: return 'Application Type';
       case 2: return 'Project Scale';
       case 3: return 'Description';
-      case 4: return 'Contact Info';
-      case 5: return 'Feature Selection';
+      case 4: return 'Feature Selection';
+      case 5: return 'Contact Info';
       default: return 'Unknown';
     }
   };
@@ -319,6 +311,40 @@ function CalculatorContent() {
     if (!canProceed()) return;
 
     setIsSubmitting(true);
+
+    // Validate phone silently via Twilio Lookup if not already validated
+    if (!formData.phoneVerified) {
+      try {
+        const fullPhone = `${formData.countryCode}${formData.phone.replace(/[\s-]/g, "")}`;
+        const phoneRes = await fetch("/api/validate-phone", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: fullPhone, countryCode: formData.countryCode }),
+        });
+        if (!phoneRes.ok) {
+          toast.error("Please enter a valid phone number");
+          setIsSubmitting(false);
+          return;
+        }
+        updateVerificationStatus("phoneVerified", true);
+      } catch {
+        toast.error("Phone validation failed. Please try again.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    // Tag Clarity with contact info
+    clarityEvent.setTag("user_country", formData.country);
+    clarityEvent.setTag("user_name", formData.name);
+    clarityEvent.identify(formData.email);
+
+    // Send init estimate (previously fired on step change)
+    if (!initEstimateSent.current) {
+      initEstimateSent.current = true;
+      sendInitEstimate();
+    }
+
     const currentTrafficSource = getBestTrafficSource();
 
     try {
@@ -456,6 +482,14 @@ function CalculatorContent() {
           )}
 
           {currentStep === 4 && (
+            <Step4Features
+              features={formData.features}
+              onToggleFeature={toggleFeature}
+              isLoading={isGeneratingFeatures}
+            />
+          )}
+
+          {currentStep === 5 && (
             <Step5Contact
               name={formData.name}
               email={formData.email}
@@ -466,14 +500,6 @@ function CalculatorContent() {
               phoneVerified={formData.phoneVerified}
               onContactChange={updateContactInfo}
               onVerificationChange={updateVerificationStatus}
-            />
-          )}
-
-          {currentStep === 5 && (
-            <Step4Features
-              features={formData.features}
-              onToggleFeature={toggleFeature}
-              isLoading={isGeneratingFeatures}
             />
           )}
         </motion.div>

@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ProjectScale } from "@/types";
-import { Rocket, TrendingUp, Building2, Clock, DollarSign, Users, Zap } from "lucide-react";
+import { Rocket, TrendingUp, Building2, Clock, DollarSign, Zap } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 interface ScaleOption {

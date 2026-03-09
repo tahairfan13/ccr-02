@@ -155,34 +155,19 @@ export function useTrafficSource(): TrafficSourceData {
   useEffect(() => {
     // Only run on client
     if (typeof window === "undefined") return;
-    
-    console.log("🚀 Traffic Source Hook Initializing (with sourcebuster)...");
-    console.log("📍 Current URL:", window.location.href);
-    console.log("📍 Search params:", searchParams?.toString());
-    
+
     // Initialize sourcebuster
-    // This will automatically:
-    // - Parse UTM parameters
-    // - Detect referrer
-    // - Handle session logic
-    // - Store in cookies
     sbjs.init({
       domain: window.location.hostname,
-      lifetime: 6, // Cookie lifetime in months
-      session_length: 30, // Session length in minutes
-      callback: () => {
-        console.log("📊 Sourcebuster initialized");
-        console.log("📊 Current source:", sbjs.get.current);
-        console.log("📊 First source:", sbjs.get.first);
-        console.log("📊 Current add:", sbjs.get.current_add);
-      }
+      lifetime: 6,
+      session_length: 30,
     });
-    
+
     // Get data from sourcebuster
     const current = sbjs.get.current;
     const first = sbjs.get.first;
     const currentAdd = sbjs.get.current_add;
-    
+
     // Also get from URL params (for immediate detection before cookie sync)
     const utmSource = searchParams?.get("utm_source") || current.src || null;
     const utmMedium = searchParams?.get("utm_medium") || current.mdm || null;
@@ -195,7 +180,7 @@ export function useTrafficSource(): TrafficSourceData {
     }
     const gclid = urlGclid || getStoredGclid();
     const fbclid = searchParams?.get("fbclid") || null;
-    
+
     // Detect the friendly source name
     const sourceName = detectSourceName(
       utmSource,
@@ -203,7 +188,7 @@ export function useTrafficSource(): TrafficSourceData {
       current.src,
       current.mdm
     );
-    
+
     // Handle fbclid/gclid override
     let finalSource = sourceName;
     if (fbclid && sourceName === "Direct") {
@@ -211,8 +196,9 @@ export function useTrafficSource(): TrafficSourceData {
     } else if (gclid && sourceName === "Direct") {
       finalSource = "Google Ads";
     }
-    
-    const newData: TrafficSourceData = {
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- legitimate data-fetching pattern
+    setTrafficData({
       source: finalSource,
       utmSource: utmSource !== "(none)" ? utmSource : null,
       utmMedium: utmMedium !== "(none)" ? utmMedium : null,
@@ -229,13 +215,8 @@ export function useTrafficSource(): TrafficSourceData {
         campaign: first.cmp,
         date: first.fd || "",
       } : undefined,
-    };
-    
-    setTrafficData(newData);
-    
-    console.log("✅ Traffic data captured:", newData);
-    console.log(`✨ Detected source: ${finalSource}`);
-    
+    });
+
   }, [searchParams]);
 
   return trafficData;
