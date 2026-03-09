@@ -7,6 +7,7 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import {
   User,
@@ -48,22 +49,36 @@ export default function Step5Contact({
   onVerificationChange,
 }: Step5Props) {
   const [emailLoading, setEmailLoading] = useState(false);
+  const [phoneLoading, setPhoneLoading] = useState(false);
   const [phoneFormatValid, setPhoneFormatValid] = useState<boolean | null>(null);
   const emailDebounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isTecaudexEmail = email.toLowerCase().endsWith("@tecaudex.com");
 
-  // Validate phone format on blur or change
+  // Strip leading zeros from phone when combining with country code (e.g. UK users type 07511... but +44 already has the country code)
+  const getFullPhone = () => {
+    const stripped = phone.replace(/[\s-]/g, "").replace(/^0+/, "");
+    return `${countryCode}${stripped}`;
+  };
+
+  // Validate phone format on change
   useEffect(() => {
     if (!phone || phone.trim().length < 4) {
       setPhoneFormatValid(null);
       return;
     }
 
-    const fullPhone = `${countryCode}${phone.replace(/[\s-]/g, "")}`;
+    const fullPhone = getFullPhone();
     const parsed = parsePhoneNumberFromString(fullPhone);
     setPhoneFormatValid(parsed ? parsed.isValid() : false);
+  }, [phone, countryCode]);
+
+  // Reset phoneVerified when phone number changes
+  useEffect(() => {
+    if (phoneVerified) {
+      onVerificationChange("phoneVerified", false);
+    }
   }, [phone, countryCode]);
 
   // Auto-verify phone for @tecaudex.com emails
@@ -129,6 +144,38 @@ export default function Step5Contact({
       toast.error("Failed to validate email. Please try again.");
     } finally {
       setEmailLoading(false);
+    }
+  };
+
+  const handleVerifyPhone = async () => {
+    if (!phoneFormatValid) return;
+
+    setPhoneLoading(true);
+    try {
+      const fullPhone = getFullPhone();
+      const response = await fetch("/api/validate-phone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: fullPhone }),
+      });
+
+      if (!response.ok) {
+        toast.error("Invalid phone number. Please check and try again.");
+        return;
+      }
+
+      onVerificationChange("phoneVerified", true);
+      clarityEvent.phoneVerified("lookup_v2");
+      clarityEvent.setTag("phone_country", country);
+
+      toast.success("Phone verified successfully!", {
+        description: "Your phone number has been confirmed.",
+      });
+    } catch (error) {
+      console.error("Error verifying phone:", error);
+      toast.error("Phone verification failed. Please try again.");
+    } finally {
+      setPhoneLoading(false);
     }
   };
 
@@ -247,7 +294,7 @@ export default function Step5Contact({
             </Select>
           </div>
 
-          {/* Phone with Format Validation */}
+          {/* Phone with Verify Button */}
           <div>
             <Label htmlFor="phone" className="flex items-center gap-2 mb-2 md:mb-3 text-xs md:text-sm font-semibold text-gray-900">
               <div className="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-gradient-to-br from-[#0094ED] to-[#0070bd] flex items-center justify-center">
@@ -260,26 +307,36 @@ export default function Step5Contact({
                 <div className="flex-shrink-0 flex items-center px-3 py-2 bg-gray-100 border border-gray-200 rounded-md text-sm md:text-sm font-medium text-gray-700">
                   {countryCode}
                 </div>
-                <div className="relative flex-grow">
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) =>
-                      onContactChange(name, email, country, countryCode, e.target.value)
-                    }
-                    placeholder="555 123 4567"
-                    className="border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b] pr-10"
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    {phoneFormatValid === true && (
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) =>
+                    onContactChange(name, email, country, countryCode, e.target.value)
+                  }
+                  placeholder="555 123 4567"
+                  className="flex-grow border-gray-200 focus:border-[#ed1a3b] focus:ring-1 focus:ring-[#ed1a3b]"
+                  disabled={phoneVerified}
+                />
+                {!phoneVerified && !isTecaudexEmail && (
+                  <Button
+                    onClick={handleVerifyPhone}
+                    disabled={!phoneFormatValid || phoneLoading}
+                    className="flex-shrink-0 bg-[#0094ED] hover:bg-[#0070bd] text-white"
+                  >
+                    {phoneLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      "Verify"
                     )}
-                    {phoneFormatValid === false && (
-                      <span className="text-red-500 text-xs font-medium">Invalid</span>
-                    )}
+                  </Button>
+                )}
+                {phoneVerified && (
+                  <div className="flex items-center gap-2 px-4 bg-green-50 border border-green-200 text-green-600 rounded-md">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span className="text-sm font-semibold">Verified</span>
                   </div>
-                </div>
+                )}
               </div>
               {phoneFormatValid === false && (
                 <motion.p
@@ -288,6 +345,16 @@ export default function Step5Contact({
                   className="text-xs text-red-500"
                 >
                   Please enter a valid phone number for the selected country
+                </motion.p>
+              )}
+              {phoneVerified && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-xs text-green-600 flex items-center gap-1"
+                >
+                  <CheckCircle2 className="w-3 h-3" />
+                  Phone verified successfully
                 </motion.p>
               )}
             </div>

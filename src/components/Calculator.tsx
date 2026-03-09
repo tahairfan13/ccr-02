@@ -215,7 +215,7 @@ function CalculatorContent() {
         return (
           formData.name.trim().length > 0 &&
           formData.emailVerified &&
-          formData.phone.replace(/[\s-]/g, "").length >= 7
+          formData.phoneVerified
         );
       default:
         return false;
@@ -310,28 +310,6 @@ function CalculatorContent() {
     if (!canProceed()) return;
 
     setIsSubmitting(true);
-
-    // Validate phone silently via Twilio Lookup if not already validated
-    if (!formData.phoneVerified) {
-      try {
-        const fullPhone = `${formData.countryCode}${formData.phone.replace(/[\s-]/g, "")}`;
-        const phoneRes = await fetch("/api/validate-phone", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: fullPhone, countryCode: formData.countryCode }),
-        });
-        if (!phoneRes.ok) {
-          toast.error("Please enter a valid phone number");
-          setIsSubmitting(false);
-          return;
-        }
-        updateVerificationStatus("phoneVerified", true);
-      } catch {
-        toast.error("Phone validation failed. Please try again.");
-        setIsSubmitting(false);
-        return;
-      }
-    }
 
     // Tag Clarity with contact info
     clarityEvent.setTag("user_country", formData.country);
