@@ -150,9 +150,15 @@ export default function Step5Contact({
   const handleVerifyPhone = async () => {
     if (!phoneFormatValid) return;
 
+    // Strip leading zeros from the displayed input before verifying
+    const strippedPhone = phone.replace(/^0+/, "");
+    if (strippedPhone !== phone) {
+      onContactChange(name, email, country, countryCode, strippedPhone);
+    }
+
     setPhoneLoading(true);
     try {
-      const fullPhone = getFullPhone();
+      const fullPhone = `${countryCode}${strippedPhone.replace(/[\s-]/g, "")}`;
       const response = await fetch("/api/validate-phone", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
