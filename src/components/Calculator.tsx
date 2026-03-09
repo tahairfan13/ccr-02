@@ -73,8 +73,6 @@ function CalculatorContent() {
     }
   }, [trafficSource]);
 
-  // initEstimate is now called inside handleSubmit instead of on step change
-
   const getBestTrafficSource = () => {
     const persistedGclid = trafficSource.gclid || getStoredGclid();
 
@@ -133,6 +131,7 @@ function CalculatorContent() {
     };
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const sendInitEstimate = async () => {
     try {
       const selectedFeatures = formData.features.filter((f) => f.selected);
@@ -338,12 +337,6 @@ function CalculatorContent() {
     clarityEvent.setTag("user_country", formData.country);
     clarityEvent.setTag("user_name", formData.name);
     clarityEvent.identify(formData.email);
-
-    // Send init estimate (previously fired on step change)
-    if (!initEstimateSent.current) {
-      initEstimateSent.current = true;
-      sendInitEstimate();
-    }
 
     const currentTrafficSource = getBestTrafficSource();
 
