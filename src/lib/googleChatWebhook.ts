@@ -1,8 +1,21 @@
 interface TrafficSourceData {
   source: string;
-  utmSource: string | null;
-  utmMedium: string | null;
-  utmCampaign: string | null;
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_term?: string;
+  utm_content?: string;
+  gclid?: string;
+  gbraid?: string;
+  wbraid?: string;
+  fbclid?: string;
+  msclkid?: string;
+  landing_page?: string;
+  referrer?: string;
+  // Legacy camelCase format (sourcebuster)
+  utmSource?: string | null;
+  utmMedium?: string | null;
+  utmCampaign?: string | null;
 }
 
 interface LeadData {
@@ -26,110 +39,122 @@ interface LeadData {
 
 const WEBHOOK_URL = "https://chat.googleapis.com/v1/spaces/AAAACFWW_6g/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=zQ8eDGM5G-ABlY0M7ZW2ZPqfhZWRTClqzcNINlsDLb0";
 
+function getSourceLabel(source: string): string {
+  const s = source.toLowerCase();
+  if (s.includes("meta") || s.includes("facebook") || s.includes("fb") || s.includes("instagram")) return "Meta Ads";
+  if (s.includes("google") && (s.includes("ads") || s.includes("cpc") || s.includes("ppc"))) return "Google Ads";
+  if (s === "google_ads") return "Google Ads";
+  if (s === "facebook_ads") return "Meta Ads";
+  if (s === "microsoft_ads") return "Microsoft Ads";
+  if (s.includes("organic")) return "Organic Search";
+  if (s.includes("linkedin")) return "LinkedIn";
+  if (s.includes("twitter") || s.includes("x.com")) return "Twitter/X";
+  if (s.includes("tiktok")) return "TikTok";
+  if (s.includes("email") || s.includes("newsletter")) return "Email";
+  if (s.includes("referral")) return `Referral (${source})`;
+  if (s === "direct" || s === "unknown") return "Direct";
+  return source;
+}
+
+function formatTrafficSection(ts?: TrafficSourceData): string {
+  if (!ts) return "<b>Attribution</b><br>No tracking data";
+
+  const sourceLabel = getSourceLabel(ts.source);
+  const campaign = ts.utm_campaign || ts.utmCampaign || "";
+  const medium = ts.utm_medium || ts.utmMedium || "";
+  const source = ts.utm_source || ts.utmSource || "";
+  const gclid = ts.gclid || "";
+  const fbclid = ts.fbclid || "";
+  const msclkid = ts.msclkid || "";
+  const landing = ts.landing_page || "";
+  const referrer = ts.referrer || "";
+
+  let text = `<b>Attribution</b><br>Channel: ${sourceLabel}`;
+  if (source) text += `<br>Source: ${source}`;
+  if (medium) text += `<br>Medium: ${medium}`;
+  if (campaign) text += `<br>Campaign: ${campaign}`;
+  if (ts.utm_term) text += `<br>Term: ${ts.utm_term}`;
+  if (ts.utm_content) text += `<br>Content: ${ts.utm_content}`;
+  if (gclid) text += `<br>GCLID: ${gclid.substring(0, 24)}${gclid.length > 24 ? "..." : ""}`;
+  if (fbclid) text += `<br>FBCLID: ${fbclid.substring(0, 24)}${fbclid.length > 24 ? "..." : ""}`;
+  if (msclkid) text += `<br>MSCLKID: ${msclkid.substring(0, 24)}${msclkid.length > 24 ? "..." : ""}`;
+  if (landing) text += `<br>Landing page: ${landing}`;
+  if (referrer) text += `<br>Referrer: ${referrer}`;
+  return text;
+}
+
 export async function sendGoogleChatNotification(data: LeadData): Promise<void> {
   try {
-    const statusEmoji = data.isComplete ? "✅" : "⏳";
-    const statusText = data.isComplete ? "COMPLETE" : "INCOMPLETE";
-
-    // Calculate hours range (assuming -20% to +30% variance)
-    const minHours = data.totalHours * 0.8;
-    const maxHours = data.totalHours * 1.3;
-
-    // Format application types
+    const status = data.isComplete ? "SUBMITTED" : "IN PROGRESS";
     const appTypes = data.applicationType.join(", ");
 
-    // Format traffic source - handle various formats
-    const getSourceLabel = (source: string): string => {
-      const sourceLower = source.toLowerCase();
-      
-      if (sourceLower.includes("meta") || sourceLower.includes("facebook") || sourceLower.includes("fb") || sourceLower.includes("instagram")) {
-        return "📘 Meta Ads (Facebook/Instagram)";
-      }
-      if (sourceLower.includes("google") && (sourceLower.includes("ads") || sourceLower.includes("cpc") || sourceLower.includes("ppc"))) {
-        return "🔍 Google Ads";
-      }
-      if (sourceLower.includes("organic")) {
-        return "🌱 Organic Search";
-      }
-      if (sourceLower.includes("linkedin")) {
-        return "💼 LinkedIn";
-      }
-      if (sourceLower.includes("twitter") || sourceLower.includes("x.com")) {
-        return "🐦 Twitter/X";
-      }
-      if (sourceLower.includes("tiktok")) {
-        return "🎵 TikTok";
-      }
-      if (sourceLower.includes("email") || sourceLower.includes("newsletter")) {
-        return "📧 Email";
-      }
-      if (sourceLower.includes("referral")) {
-        return `🔗 ${source}`;
-      }
-      if (sourceLower === "direct" || sourceLower === "unknown") {
-        return "🔗 Direct";
-      }
-      
-      // Return the source as-is if unrecognized
-      return `🔗 ${source}`;
-    };
-
-    const trafficSourceLabel = data.trafficSource
-      ? getSourceLabel(data.trafficSource.source)
-      : "🔗 Not tracked";
-
-    // Use exact cost if provided, otherwise show range
     const costDisplay = data.exactCost
-      ? `$${data.exactCost.toLocaleString()}`
-      : `$${data.estimatedCost.min.toLocaleString()} - $${data.estimatedCost.max.toLocaleString()}`;
+      ? `£${data.exactCost.toLocaleString()}`
+      : `£${data.estimatedCost.min.toLocaleString()} - £${data.estimatedCost.max.toLocaleString()}`;
+
+    const minHours = Math.round(data.totalHours * 0.8);
+    const maxHours = Math.round(data.totalHours * 1.3);
 
     const message = {
-      text: `${statusEmoji} Sales Lead Alert`,
+      text: `CCR Lead [${status}]: ${data.name}`,
       cards: [{
         header: {
-          title: `${statusEmoji} ${statusText} - New Lead Alert: ${data.name}`,
-          subtitle: "INFO",
-          imageUrl: "https://fonts.gstatic.com/s/i/short-term/release/googlesymbols/priority_high/default/24px.svg"
+          title: `${data.name} — ${status}`,
+          subtitle: `${appTypes} | ${data.projectScale || "Not specified"} | ${costDisplay}`,
         },
-        sections: [{
-          widgets: [
-            {
+        sections: [
+          {
+            header: "Contact",
+            widgets: [{
               textParagraph: {
-                text: `<b>👤 Client Information:</b><br>• <b>Name:</b> ${data.name}<br>• <b>Email:</b> ${data.email}<br>• <b>Phone:</b> ${data.countryCode} ${data.phone} ✅ Verified<br>• <b>Region:</b> ${data.country}`
+                text: [
+                  `<b>${data.name}</b>`,
+                  `${data.email}`,
+                  `${data.countryCode} ${data.phone} (verified)`,
+                  `${data.country}`,
+                ].join("<br>")
               }
-            },
-            {
+            }]
+          },
+          {
+            header: "Project",
+            widgets: [{
               textParagraph: {
-                text: `<b>Traffic Source:</b> ${trafficSourceLabel}${data.trafficSource?.utmCampaign ? `<br>• <b>Campaign:</b> ${data.trafficSource.utmCampaign}` : ''}${data.trafficSource?.utmMedium ? `<br>• <b>Medium:</b> ${data.trafficSource.utmMedium}` : ''}${data.trafficSource?.utmSource ? `<br>• <b>Source:</b> ${data.trafficSource.utmSource}` : ''}`
+                text: [
+                  `Type: ${appTypes}`,
+                  `Scale: ${data.projectScale || "Not specified"}`,
+                  `Hours: ${data.totalHours}h (range: ${minHours}–${maxHours}h)`,
+                  `Estimate: ${costDisplay}`,
+                  ``,
+                  `${data.description.length > 300 ? data.description.substring(0, 300) + "..." : data.description}`,
+                ].join("<br>")
               }
-            },
-            {
+            }]
+          },
+          {
+            header: "Attribution",
+            widgets: [{
               textParagraph: {
-                text: `<b>🎯 Project Details:</b><br>• <b>Type:</b> ${appTypes}<br>• <b>Scale:</b> ${data.projectScale || 'Not specified'}<br>• <b>Description:</b> ${data.description}`
+                text: formatTrafficSection(data.trafficSource)
               }
-            },
-            {
-              textParagraph: {
-                text: `<b>💰 Cost Estimate:</b><br>• <b>Total Hours:</b> ${data.totalHours} hrs<br>• <b>Hours Range:</b> ${minHours.toFixed(1)}-${maxHours.toFixed(1)} hrs<br>• <b>Exact Cost:</b> ${costDisplay}`
-              }
-            },
-            {
+            }]
+          },
+          {
+            widgets: [{
               textParagraph: {
                 text: data.isComplete
-                  ? `<b>💡 Status:</b> CCR Report has been sent to the client. Ready for follow-up!<br>• <b>WhatsApp:</b> ✅ Ready to Message`
-                  : `<b>💡 Status:</b> Lead is filling out the form. Initial estimate in progress.`
+                  ? `<b>Status:</b> Report sent to client. Ready for follow-up.`
+                  : `<b>Status:</b> Lead is still completing the form.`
               }
-            }
-          ]
-        }]
+            }]
+          }
+        ]
       }]
     };
 
     const response = await fetch(WEBHOOK_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json; charset=UTF-8",
-      },
+      headers: { "Content-Type": "application/json; charset=UTF-8" },
       body: JSON.stringify(message),
     });
 
@@ -138,10 +163,7 @@ export async function sendGoogleChatNotification(data: LeadData): Promise<void> 
       console.error("Google Chat webhook error:", response.status, errorText);
       throw new Error(`Webhook failed: ${response.status}`);
     }
-
-    console.log("Google Chat notification sent successfully:", statusText);
   } catch (error) {
     console.error("Error sending Google Chat notification:", error);
-    // Don't throw - we don't want to break the user flow
   }
 }

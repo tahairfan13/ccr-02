@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import ProgressIndicator from "@/components/ProgressIndicator";
 import Step1ApplicationType from "@/components/steps/Step1ApplicationType";
 import Step2ProjectScale from "@/components/steps/Step2ProjectScale";
@@ -12,6 +12,7 @@ import Step4Features from "@/components/steps/Step4Features";
 import Step5Contact from "@/components/steps/Step5Contact";
 import { Button } from "@/components/ui/button";
 import { useFormState } from "@/hooks/useFormState";
+import { useTrackingParams, getTrafficSourceLabel } from "@/hooks/useTrackingParams";
 import { useTrafficSource, getSourcebusterData, getStoredGclid } from "@/hooks/useTrafficSource";
 import { ArrowRight, ArrowLeft, Send, Loader2 } from "lucide-react";
 import { fbPixelEvent } from "@/lib/fbPixel";
@@ -36,6 +37,7 @@ function CalculatorLoading() {
 
 function CalculatorContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const {
     currentStep,
     formData,
@@ -49,85 +51,74 @@ function CalculatorContent() {
     nextStep,
     prevStep,
   } = useFormState();
+  // Primary tracking: server-side middleware cookies (Safari ITP resilient)
+  const trackingParams = useTrackingParams();
+  // Legacy tracking: sourcebuster (fallback for Clarity tagging)
   const trafficSource = useTrafficSource();
 
   const [isGeneratingFeatures, setIsGeneratingFeatures] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const initEstimateSent = useRef(false);
   const trafficSourceTagged = useRef(false);
+  const typePreFilled = useRef(false);
 
+  // Pre-fill application type from URL params (e.g. /calculate?type=mobile)
   useEffect(() => {
-    if (trafficSource.source !== "Direct" && !trafficSourceTagged.current) {
-      trafficSourceTagged.current = true;
-      clarityEvent.setTag('traffic_source', trafficSource.source);
-      if (trafficSource.utmSource) clarityEvent.setTag('utm_source', trafficSource.utmSource);
-      if (trafficSource.utmMedium) clarityEvent.setTag('utm_medium', trafficSource.utmMedium);
-      if (trafficSource.utmCampaign) clarityEvent.setTag('utm_campaign', trafficSource.utmCampaign);
-      if (trafficSource.gclid) clarityEvent.setTag('has_gclid', 'true');
-      if (trafficSource.fbclid) clarityEvent.setTag('has_fbclid', 'true');
-      console.log("🏷️ Tagged Clarity session with traffic source:", trafficSource.source);
-    } else if (trafficSource.source === "Direct" && !trafficSourceTagged.current) {
+    if (typePreFilled.current) return;
+    const typeParam = searchParams.get("type");
+    if (typeParam && ["ai", "blockchain", "mobile", "web"].includes(typeParam)) {
+      typePreFilled.current = true;
+      updateApplicationTypes([typeParam as "ai" | "blockchain" | "mobile" | "web"]);
+    }
+  }, [searchParams]);
+
+  // Tag Clarity sessions with traffic source info
+  useEffect(() => {
+    if (trafficSourceTagged.current) return;
+    // Prefer middleware cookies, fall back to sourcebuster
+    const source = getTrafficSourceLabel(trackingParams) || trafficSource.source;
+    if (source === "Direct" && trafficSource.source === "Direct") {
       trafficSourceTagged.current = true;
       clarityEvent.setTag('traffic_source', 'Direct');
-      console.log("🏷️ Tagged Clarity session with traffic source: Direct");
+      return;
     }
-  }, [trafficSource]);
+    trafficSourceTagged.current = true;
+    clarityEvent.setTag('traffic_source', source);
+    const utmSource = trackingParams.utm_source || trafficSource.utmSource;
+    const utmMedium = trackingParams.utm_medium || trafficSource.utmMedium;
+    const utmCampaign = trackingParams.utm_campaign || trafficSource.utmCampaign;
+    if (utmSource) clarityEvent.setTag('utm_source', utmSource);
+    if (utmMedium) clarityEvent.setTag('utm_medium', utmMedium);
+    if (utmCampaign) clarityEvent.setTag('utm_campaign', utmCampaign);
+    if (trackingParams.gclid || trafficSource.gclid) clarityEvent.setTag('has_gclid', 'true');
+    if (trackingParams.fbclid || trafficSource.fbclid) clarityEvent.setTag('has_fbclid', 'true');
+    if (trackingParams.msclkid) clarityEvent.setTag('has_msclkid', 'true');
+  }, [trackingParams, trafficSource]);
 
-  const getBestTrafficSource = () => {
-    const persistedGclid = trafficSource.gclid || getStoredGclid();
-
-    if (trafficSource.source !== "Direct") {
-      return {
-        source: trafficSource.source,
-        utmSource: trafficSource.utmSource,
-        utmMedium: trafficSource.utmMedium,
-        utmCampaign: trafficSource.utmCampaign,
-        gclid: persistedGclid,
-        fbclid: trafficSource.fbclid,
-      };
-    }
-
-    const sbData = getSourcebusterData();
-    if (sbData?.current) {
-      const src = sbData.current.src;
-      const mdm = sbData.current.mdm;
-      const cmp = sbData.current.cmp;
-
-      let source = "Direct";
-      if (src && src !== "(direct)" && src !== "(none)") {
-        const srcLower = src.toLowerCase();
-        if (srcLower.includes("facebook") || srcLower.includes("fb") || srcLower.includes("instagram") || srcLower.includes("meta")) {
-          source = "Meta Ads";
-        } else if (srcLower.includes("google") && (mdm === "cpc" || mdm === "ppc" || mdm === "paid")) {
-          source = "Google Ads";
-        } else if (mdm === "organic") {
-          source = "Organic";
-        } else {
-          source = src;
-        }
-      }
-
-      if (persistedGclid && source === "Direct") {
-        source = "Google Ads";
-      }
-
-      return {
-        source,
-        utmSource: src !== "(none)" ? src : null,
-        utmMedium: mdm !== "(none)" ? mdm : null,
-        utmCampaign: cmp !== "(none)" ? cmp : null,
-        gclid: persistedGclid,
-        fbclid: trafficSource.fbclid,
-      };
-    }
+  /**
+   * Build the full tracking payload for submission.
+   * Priority: middleware cookies (_txa_*) > sourcebuster > stored gclid
+   */
+  const getTrackingPayload = () => {
+    const persistedGclid = trackingParams.gclid || trafficSource.gclid || getStoredGclid();
+    const source = getTrafficSourceLabel(trackingParams) !== "Direct"
+      ? getTrafficSourceLabel(trackingParams)
+      : trafficSource.source;
 
     return {
-      source: persistedGclid ? "Google Ads" : trafficSource.source,
-      utmSource: trafficSource.utmSource,
-      utmMedium: trafficSource.utmMedium,
-      utmCampaign: trafficSource.utmCampaign,
-      gclid: persistedGclid,
-      fbclid: trafficSource.fbclid,
+      source: persistedGclid && source === "Direct" ? "google_ads" : source,
+      gclid: persistedGclid || "",
+      gbraid: trackingParams.gbraid || "",
+      wbraid: trackingParams.wbraid || "",
+      fbclid: trackingParams.fbclid || trafficSource.fbclid || "",
+      msclkid: trackingParams.msclkid || "",
+      utm_source: trackingParams.utm_source || trafficSource.utmSource || "",
+      utm_medium: trackingParams.utm_medium || trafficSource.utmMedium || "",
+      utm_campaign: trackingParams.utm_campaign || trafficSource.utmCampaign || "",
+      utm_term: trackingParams.utm_term || trafficSource.utmTerm || "",
+      utm_content: trackingParams.utm_content || trafficSource.utmContent || "",
+      landing_page: trackingParams.landing_page || trafficSource.landingPage || "",
+      referrer: trackingParams.referrer || trafficSource.referrer || "",
     };
   };
 
@@ -136,9 +127,9 @@ function CalculatorContent() {
     try {
       const selectedFeatures = formData.features.filter((f) => f.selected);
       const totalHours = selectedFeatures.reduce((sum, f) => sum + f.hours, 0);
-      const currentTrafficSource = getBestTrafficSource();
+      const tracking = getTrackingPayload();
 
-      console.log("📤 Sending init estimate with traffic source:", currentTrafficSource);
+      console.log("📤 Sending init estimate with tracking:", tracking);
 
       const payload = {
         applicationTypes: formData.applicationTypes,
@@ -158,8 +149,20 @@ function CalculatorContent() {
           country: formData.country,
           phone_number: `${formData.countryCode} ${formData.phone}`,
         },
-        gclid: currentTrafficSource.gclid,
-        trafficSource: currentTrafficSource,
+        traffic_source: tracking.source,
+        gclid: tracking.gclid,
+        gbraid: tracking.gbraid,
+        wbraid: tracking.wbraid,
+        fbclid: tracking.fbclid,
+        msclkid: tracking.msclkid,
+        utm_source: tracking.utm_source,
+        utm_medium: tracking.utm_medium,
+        utm_campaign: tracking.utm_campaign,
+        utm_term: tracking.utm_term,
+        utm_content: tracking.utm_content,
+        landing_page: tracking.landing_page,
+        referrer: tracking.referrer,
+        trafficSource: tracking,
       };
 
       console.log("Sending init estimate:", payload);
@@ -193,7 +196,7 @@ function CalculatorContent() {
         estimatedCost: { min: minCost, max: maxCost },
         exactCost,
         isComplete: false,
-        trafficSource: currentTrafficSource,
+        trafficSource: tracking,
       });
     } catch (error) {
       console.error("Error sending init estimate:", error);
@@ -244,7 +247,7 @@ function CalculatorContent() {
       clarityEvent.setTag('features_selected_at_step', selectedCount);
     }
 
-    if (currentStep === 3 && formData.features.length === 0) {
+    if (currentStep === 3 && (formData.features.length === 0 || formData.description !== formData.lastGeneratedDescription)) {
       await generateFeatures();
     }
     nextStep();
@@ -280,7 +283,7 @@ function CalculatorContent() {
       }
 
       const data = await response.json();
-      updateFeatures(data.features);
+      updateFeatures(data.features, formData.description);
     } catch (error) {
       console.error("Error generating features:", error);
       updateFeatures([
@@ -316,7 +319,7 @@ function CalculatorContent() {
     clarityEvent.setTag("user_name", formData.name);
     clarityEvent.identify(formData.email);
 
-    const currentTrafficSource = getBestTrafficSource();
+    const tracking = getTrackingPayload();
 
     try {
       const selectedFeatures = formData.features.filter((f) => f.selected);
@@ -336,11 +339,23 @@ function CalculatorContent() {
           country: formData.country,
           phone_number: `${formData.countryCode} ${formData.phone}`,
         },
-        gclid: currentTrafficSource.gclid,
-        trafficSource: currentTrafficSource,
+        traffic_source: tracking.source,
+        gclid: tracking.gclid,
+        gbraid: tracking.gbraid,
+        wbraid: tracking.wbraid,
+        fbclid: tracking.fbclid,
+        msclkid: tracking.msclkid,
+        utm_source: tracking.utm_source,
+        utm_medium: tracking.utm_medium,
+        utm_campaign: tracking.utm_campaign,
+        utm_term: tracking.utm_term,
+        utm_content: tracking.utm_content,
+        landing_page: tracking.landing_page,
+        referrer: tracking.referrer,
+        trafficSource: tracking,
       };
 
-      console.log("📤 Submitting data with traffic source:", currentTrafficSource);
+      console.log("📤 Submitting with tracking:", tracking);
 
       const response = await fetch("https://crm.tecaudex.com/api/v1/submit_estimate", {
         method: "POST",
@@ -359,7 +374,7 @@ function CalculatorContent() {
       fbPixelEvent.lead({
         content_name: 'Cost Calculator Form',
         value: totalHours * 30,
-        currency: 'USD',
+        currency: 'GBP',
       });
 
       clarityEvent.formSubmitted({
@@ -391,13 +406,17 @@ function CalculatorContent() {
         estimatedCost: { min: minCost, max: maxCost },
         exactCost,
         isComplete: true,
-        trafficSource: currentTrafficSource,
+        trafficSource: tracking,
       });
 
-      toast.success("🎉 Estimate Submitted Successfully!", {
+      toast.success("Estimate Submitted Successfully!", {
         description: "Redirecting to confirmation page...",
         duration: 2000,
       });
+
+      try {
+        sessionStorage.setItem("estimatedCost", String(totalHours * 30));
+      } catch {}
 
       setTimeout(() => {
         router.push("/thank-you");
@@ -406,7 +425,7 @@ function CalculatorContent() {
       console.error("Error submitting form:", error);
       clarityEvent.error('form_submission_error', error.message || 'Unknown error');
 
-      toast.error("❌ Submission Failed", {
+      toast.error("Submission Failed", {
         description: error.message || "We couldn't submit your request. Please try again or contact us at hello@tecaudex.com",
         duration: 5000,
       });
@@ -476,22 +495,21 @@ function CalculatorContent() {
         </motion.div>
       </div>
 
-      {/* Navigation Buttons — fixed at bottom on mobile */}
+      {/* Navigation — fixed bottom on mobile */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="fixed md:static bottom-0 left-0 right-0 md:w-auto z-50"
       >
-        <div className="max-w-4xl mx-auto px-4 flex items-center justify-between gap-3 md:gap-4 py-4 md:py-0 md:mb-8 bg-white md:bg-transparent border-t md:border-t-0 border-gray-200 md:border-0 shadow-[0_-4px_12px_-2px_rgba(0,0,0,0.08)] md:shadow-none backdrop-blur-sm md:backdrop-blur-none"
+        <div className="max-w-4xl mx-auto px-5 flex items-center justify-between gap-3 py-4 md:py-0 md:mb-10 bg-white/90 md:bg-transparent backdrop-blur-[22px] md:backdrop-blur-none"
              style={{
                paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
-               paddingTop: 'max(1rem, env(safe-area-inset-top))',
              }}>
           <Button
             variant="outline"
             onClick={prevStep}
             disabled={currentStep === 1 || isGeneratingFeatures || isSubmitting}
-            className="flex items-center gap-1.5 md:gap-2 px-4 py-3 md:px-6 md:py-3 text-sm md:text-base font-semibold border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all rounded-xl md:rounded-lg disabled:opacity-40 disabled:cursor-not-allowed shadow-sm active:scale-95 md:active:scale-100"
+            className="flex items-center gap-1.5 px-4 py-2.5 md:px-5 md:py-2.5 text-sm font-semibold bg-neutral-100 hover:bg-neutral-200 text-neutral-700 transition-all rounded-full disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" strokeWidth={2.5} />
             <span className="hidden sm:inline">Back</span>
@@ -501,7 +519,7 @@ function CalculatorContent() {
             <Button
               onClick={handleNext}
               disabled={!canProceed() || isGeneratingFeatures}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-3 text-sm md:text-base font-bold bg-gradient-to-r from-[#ed1a3b] to-[#d11632] md:bg-[#ed1a3b] hover:from-[#d11632] hover:to-[#b01228] md:hover:bg-[#d11632] text-white transition-all rounded-xl md:rounded-lg shadow-lg md:shadow-sm hover:shadow-xl disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:from-[#ed1a3b] disabled:hover:to-[#d11632] disabled:hover:bg-[#ed1a3b] active:scale-95 md:active:scale-100"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-2.5 md:px-8 md:py-3 text-sm md:text-base font-semibold bg-neutral-900 hover:bg-neutral-800 text-white transition-all duration-200 rounded-full min-w-[140px] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {isGeneratingFeatures ? (
                 <>
@@ -520,7 +538,7 @@ function CalculatorContent() {
             <Button
               onClick={handleSubmit}
               disabled={!canProceed() || isSubmitting}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3 md:px-8 md:py-3 text-sm md:text-base font-bold bg-gradient-to-r from-green-600 to-green-700 md:bg-[#ed1a3b] hover:from-green-700 hover:to-green-800 md:hover:bg-[#d11632] text-white transition-all rounded-xl md:rounded-lg shadow-lg md:shadow-sm hover:shadow-xl disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:from-green-600 disabled:hover:to-green-700 disabled:hover:bg-[#ed1a3b] active:scale-95 md:active:scale-100"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-2.5 md:px-8 md:py-3 text-sm md:text-base font-semibold bg-[#ED1A3B] hover:bg-[#c71432] text-white transition-all duration-200 rounded-full min-w-[140px] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
@@ -530,7 +548,7 @@ function CalculatorContent() {
                 </>
               ) : (
                 <>
-                  <span className="font-bold">Get Estimate</span>
+                  <span className="font-bold">Get My Report</span>
                   <Send className="w-5 h-5 md:w-5 md:h-5" strokeWidth={2.5} />
                 </>
               )}

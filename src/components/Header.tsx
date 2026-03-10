@@ -1,32 +1,53 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Header() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <motion.header
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="w-full py-2 md:py-4 px-4 md:px-6 bg-white border-b border-gray-100 sticky top-0 z-50 flex-shrink-0"
+    <header
+      className={`
+        w-full py-3 md:py-4 px-5 md:px-8 lg:px-12 sticky top-0 z-50 flex-shrink-0
+        transition-all duration-300
+        ${scrolled
+          ? "bg-white/85 backdrop-blur-[22px] backdrop-saturate-150 shadow-[0_1px_0_rgba(0,0,0,0.04),0_4px_20px_rgba(0,0,0,0.04)]"
+          : "bg-white"
+        }
+      `}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-2 md:gap-3">
+        <Link href="/" className="flex items-center gap-3">
           <Image
             src="https://cdn.prod.website-files.com/659fb2624108883f9bb2a031/659fb4d7e951322f2486304f_logo-tecaudex-02%201.svg"
             alt="Tecaudex Logo"
             width={140}
             height={40}
-            className="h-6 md:h-10 w-auto"
+            className="h-6 md:h-9 w-auto"
             priority
           />
-          <div className="hidden sm:block w-px h-6 md:h-8 bg-gray-200" />
-          <p className="hidden sm:block text-xs md:text-sm text-gray-600 font-medium">
-            Project Cost Calculator
-          </p>
-        </div>
+          <div className="hidden sm:block w-px h-5 md:h-6 bg-neutral-100" />
+          <span className="hidden sm:block text-xs md:text-sm text-neutral-400 font-medium">
+            Cost Calculator
+          </span>
+        </Link>
+        <a
+          href="https://www.tecaudex.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs md:text-sm text-neutral-400 font-medium rounded-full px-4 py-2 transition-colors duration-200 hover:bg-[#ED1A3B]/[0.04] hover:text-[#ED1A3B]"
+        >
+          tecaudex.com
+        </a>
       </div>
-    </motion.header>
+    </header>
   );
 }

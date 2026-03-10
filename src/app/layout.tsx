@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Montserrat } from "next/font/google";
 import { Toaster } from "sonner";
 import Script from "next/script";
 import FacebookPixel from "@/components/FacebookPixel";
@@ -10,6 +10,13 @@ const inter = Inter({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800", "900"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-montserrat",
   display: "swap",
 });
 
@@ -111,7 +118,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.className} antialiased`}>
+      <body className={`${inter.variable} ${montserrat.variable} font-[family-name:var(--font-inter)] antialiased`}>
         <FacebookPixel />
         <MicrosoftClarity />
         {children}

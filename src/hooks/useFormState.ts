@@ -10,6 +10,7 @@ export function useFormState() {
     projectScale: null,
     description: "",
     features: [],
+    lastGeneratedDescription: "",
     name: "",
     email: "",
     country: "United States",
@@ -32,8 +33,12 @@ export function useFormState() {
     setFormData((prev) => ({ ...prev, description }));
   };
 
-  const updateFeatures = (features: Feature[]) => {
-    setFormData((prev) => ({ ...prev, features }));
+  const updateFeatures = (features: Feature[], generatedFromDescription?: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      features,
+      ...(generatedFromDescription !== undefined ? { lastGeneratedDescription: generatedFromDescription } : {}),
+    }));
   };
 
   const toggleFeature = (featureId: string) => {

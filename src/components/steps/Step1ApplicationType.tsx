@@ -1,17 +1,16 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ApplicationType } from "@/types";
-import { Brain, Blocks, Smartphone, Globe } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import type { ApplicationType } from "@/types";
+import { Brain, Blocks, Smartphone, Globe, Check } from "lucide-react";
 
 interface ApplicationTypeOption {
   type: ApplicationType;
   title: string;
   description: string;
   icon: React.ReactNode;
-  gradient: string;
-  bgColor: string;
+  costRange: string;
+  popular?: boolean;
 }
 
 const applicationTypes: ApplicationTypeOption[] = [
@@ -19,33 +18,30 @@ const applicationTypes: ApplicationTypeOption[] = [
     type: "ai",
     title: "AI/ML Solutions",
     description: "Machine learning, NLP, computer vision and AI integrations",
-    icon: <Brain className="w-7 h-7" strokeWidth={2} />,
-    gradient: "from-purple-500 via-purple-600 to-indigo-600",
-    bgColor: "bg-purple-50",
+    icon: <Brain className="w-6 h-6" strokeWidth={1.5} />,
+    costRange: "£12,000 – £100,000+",
   },
   {
     type: "blockchain",
     title: "Blockchain",
     description: "Smart contracts, DeFi, NFTs and Web3 applications",
-    icon: <Blocks className="w-7 h-7" strokeWidth={2} />,
-    gradient: "from-blue-500 via-blue-600 to-cyan-600",
-    bgColor: "bg-blue-50",
+    icon: <Blocks className="w-6 h-6" strokeWidth={1.5} />,
+    costRange: "£16,000 – £120,000+",
   },
   {
     type: "mobile",
     title: "Mobile Apps",
     description: "iOS, Android and cross-platform mobile applications",
-    icon: <Smartphone className="w-7 h-7" strokeWidth={2} />,
-    gradient: "from-emerald-500 via-green-600 to-teal-600",
-    bgColor: "bg-emerald-50",
+    icon: <Smartphone className="w-6 h-6" strokeWidth={1.5} />,
+    costRange: "£8,000 – £80,000+",
+    popular: true,
   },
   {
     type: "web",
     title: "Web Applications",
     description: "Progressive web apps, SaaS platforms and websites",
-    icon: <Globe className="w-7 h-7" strokeWidth={2} />,
-    gradient: "from-orange-500 via-red-500 to-pink-600",
-    bgColor: "bg-orange-50",
+    icon: <Globe className="w-6 h-6" strokeWidth={1.5} />,
+    costRange: "£6,000 – £65,000+",
   },
 ];
 
@@ -54,10 +50,7 @@ interface Step1Props {
   onSelectType: (types: ApplicationType[]) => void;
 }
 
-export default function Step1ApplicationType({
-  selectedTypes,
-  onSelectType,
-}: Step1Props) {
+export default function Step1ApplicationType({ selectedTypes, onSelectType }: Step1Props) {
   const toggleType = (type: ApplicationType) => {
     if (selectedTypes.includes(type)) {
       onSelectType(selectedTypes.filter((t) => t !== type));
@@ -67,83 +60,95 @@ export default function Step1ApplicationType({
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-2 md:py-0">
+    <div className="w-full max-w-4xl mx-auto px-5 py-2 md:py-0">
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="mb-3 md:mb-12"
+        className="mb-4 md:mb-10"
       >
-        <div className="hidden md:inline-block px-3 py-1 rounded-md bg-gray-100 text-gray-600 text-sm font-medium mb-4">
-          Step 1 of 5
-        </div>
-        <h2 className="text-xl md:text-3xl font-bold text-gray-900 mb-2 md:mb-3">
-          Select Application Type
+        <p className="text-sm text-neutral-500 font-semibold mb-2 hidden md:block">01 &mdash; Application Type</p>
+        <h2 className="text-xl md:text-[32px] font-semibold text-neutral-900 leading-tight mb-2 md:mb-3">
+          What are you building?
         </h2>
-        <p className="text-sm md:text-base text-gray-600 font-normal max-w-2xl">
-          Choose one or more application types for your project
+        <p className="text-sm md:text-base text-neutral-600 max-w-xl">
+          Select one or more — you can combine app types
         </p>
+        <p className="text-xs text-neutral-500 mt-1.5">
+          Complete in 2 minutes — get your personalised report by email and WhatsApp
+        </p>
+        {selectedTypes.length > 0 && (
+          <motion.p
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-xs text-[#ED1A3B] font-medium mt-2"
+          >
+            {selectedTypes.length} selected
+          </motion.p>
+        )}
       </motion.div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
         {applicationTypes.map((option, index) => {
           const isSelected = selectedTypes.includes(option.type);
 
           return (
-            <motion.div
+            <motion.button
               key={option.type}
-              initial={{ opacity: 0, y: 20 }}
+              type="button"
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.3,
-                delay: index * 0.08,
-              }}
+              transition={{ duration: 0.3, delay: index * 0.06 }}
+              onClick={() => toggleType(option.type)}
+              className={`
+                group relative text-left rounded-2xl p-5 md:p-7 transition-all duration-200 cursor-pointer
+                ${isSelected
+                  ? "bg-white shadow-[0_4px_24px_-2px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.04)]"
+                  : "bg-[#f7f7f6] hover:bg-white hover:shadow-[0_2px_16px_-2px_rgba(0,0,0,0.08)]"
+                }
+              `}
             >
-              <Card
-                className={`
-                  group relative cursor-pointer transition-all duration-200
-                  hover:shadow-md
-                  ${
-                    isSelected
-                      ? "border-[#ed1a3b] border-2 shadow-lg bg-red-50"
-                      : "border-gray-200 hover:border-gray-300 bg-white"
-                  }
-                `}
-                onClick={() => toggleType(option.type)}
-              >
-                <div className="p-4 md:p-7">
-                  <div className="flex items-start gap-3 md:gap-5">
-                    {/* Colorful Icon */}
-                    <div
-                      className={`
-                        w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-gradient-to-br ${option.gradient}
-                        flex items-center justify-center text-white flex-shrink-0
-                        shadow-lg transition-transform duration-200
-                        ${isSelected ? "scale-105 shadow-xl" : "group-hover:scale-105"}
-                      `}
-                    >
-                      <div className="scale-75 md:scale-100">
-                        {option.icon}
-                      </div>
-                    </div>
+              {/* Popular badge */}
+              {option.popular && (
+                <span className="absolute -top-2.5 right-3 px-2.5 py-0.5 bg-[#ED1A3B] text-white text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm">
+                  Popular
+                </span>
+              )}
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-base md:text-xl font-bold text-gray-900 mb-1 md:mb-2 leading-tight">
-                        {option.title}
-                      </h3>
-                      <p className="text-xs md:text-sm text-gray-600 leading-relaxed">
-                        {option.description}
-                      </p>
-                    </div>
-                  </div>
+              {/* Selected checkmark */}
+              {isSelected && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute top-4 right-4 w-6 h-6 rounded-full bg-neutral-900 flex items-center justify-center"
+                >
+                  <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                </motion.div>
+              )}
+
+              <div className="flex items-start gap-4">
+                <div className={`
+                  w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-200
+                  ${isSelected ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-600 group-hover:bg-neutral-200"}
+                `}>
+                  {option.icon}
                 </div>
-              </Card>
-            </motion.div>
+                <div className="flex-1 min-w-0 pt-0.5">
+                  <h3 className="text-base md:text-lg font-semibold text-neutral-900 mb-1">
+                    {option.title}
+                  </h3>
+                  <p className="text-xs md:text-sm text-neutral-600 leading-relaxed mb-2">
+                    {option.description}
+                  </p>
+                  <p className={`text-[13px] font-semibold transition-colors duration-200 ${isSelected ? "text-[#ED1A3B]" : "text-neutral-800"}`}>
+                    {option.costRange}
+                  </p>
+                </div>
+              </div>
+            </motion.button>
           );
         })}
       </div>
-
     </div>
   );
 }

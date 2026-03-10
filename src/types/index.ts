@@ -1,6 +1,6 @@
 export type ApplicationType = "ai" | "blockchain" | "mobile" | "web";
 
-export type ProjectScale = "mvp" | "mid" | "enterprise";
+export type ProjectScale = "mvp" | "mid";
 
 export interface Feature {
   id: string;
@@ -21,6 +21,7 @@ export interface FormData {
   country: string;
   countryCode: string;
   phone: string;
+  lastGeneratedDescription: string;
   emailVerified: boolean;
   phoneVerified: boolean;
   trafficSource?: string;
