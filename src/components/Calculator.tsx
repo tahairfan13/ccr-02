@@ -122,86 +122,6 @@ function CalculatorContent() {
     };
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const sendInitEstimate = async () => {
-    try {
-      const selectedFeatures = formData.features.filter((f) => f.selected);
-      const totalHours = selectedFeatures.reduce((sum, f) => sum + f.hours, 0);
-      const tracking = getTrackingPayload();
-
-      console.log("📤 Sending init estimate with tracking:", tracking);
-
-      const payload = {
-        applicationTypes: formData.applicationTypes,
-        projectScale: formData.projectScale,
-        description: formData.description,
-        features: selectedFeatures,
-        totalHours,
-        estimatedCost: totalHours * 30,
-        hourlyRate: 30,
-        name: formData.name,
-        email: formData.email,
-        country: formData.country,
-        phone_number: `${formData.countryCode} ${formData.phone}`,
-        contact: {
-          name: formData.name,
-          email: formData.email,
-          country: formData.country,
-          phone_number: `${formData.countryCode} ${formData.phone}`,
-        },
-        traffic_source: tracking.source,
-        gclid: tracking.gclid,
-        gbraid: tracking.gbraid,
-        wbraid: tracking.wbraid,
-        fbclid: tracking.fbclid,
-        msclkid: tracking.msclkid,
-        utm_source: tracking.utm_source,
-        utm_medium: tracking.utm_medium,
-        utm_campaign: tracking.utm_campaign,
-        utm_term: tracking.utm_term,
-        utm_content: tracking.utm_content,
-        landing_page: tracking.landing_page,
-        referrer: tracking.referrer,
-        trafficSource: tracking,
-      };
-
-      console.log("Sending init estimate:", payload);
-
-      const response = await fetch("https://crm.tecaudex.com/api/v1/init_estimates", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        console.error("Failed to send init estimate:", response.status);
-      } else {
-        console.log("Init estimate sent successfully");
-      }
-
-      const minCost = totalHours * 0.8 * 30;
-      const maxCost = totalHours * 1.3 * 30;
-      const exactCost = totalHours * 30;
-
-      await sendGoogleChatNotification({
-        name: formData.name,
-        email: formData.email,
-        country: formData.country,
-        phone: formData.phone,
-        countryCode: formData.countryCode,
-        applicationType: formData.applicationTypes,
-        projectScale: formData.projectScale,
-        description: formData.description,
-        totalHours,
-        estimatedCost: { min: minCost, max: maxCost },
-        exactCost,
-        isComplete: false,
-        trafficSource: tracking,
-      });
-    } catch (error) {
-      console.error("Error sending init estimate:", error);
-    }
-  };
 
   const canProceed = () => {
     switch (currentStep) {
@@ -331,8 +251,8 @@ function CalculatorContent() {
         description: formData.description,
         features: selectedFeatures,
         totalHours,
-        estimatedCost: totalHours * 30,
-        hourlyRate: 30,
+        estimatedCost: totalHours * 22,
+        hourlyRate: 22,
         contact: {
           name: formData.name,
           email: formData.email,
@@ -373,7 +293,7 @@ function CalculatorContent() {
 
       fbPixelEvent.lead({
         content_name: 'Cost Calculator Form',
-        value: totalHours * 30,
+        value: totalHours * 22,
         currency: 'GBP',
       });
 
@@ -381,17 +301,17 @@ function CalculatorContent() {
         applicationTypes: formData.applicationTypes.join(', '),
         projectScale: formData.projectScale,
         totalHours,
-        estimatedCost: totalHours * 30,
+        estimatedCost: totalHours * 22,
         featuresCount: selectedFeatures.length,
       });
 
       clarityEvent.setTag('total_hours', totalHours);
-      clarityEvent.setTag('estimated_cost', totalHours * 30);
+      clarityEvent.setTag('estimated_cost', totalHours * 22);
       clarityEvent.setTag('features_selected', selectedFeatures.length);
 
-      const minCost = totalHours * 0.8 * 30;
-      const maxCost = totalHours * 1.3 * 30;
-      const exactCost = totalHours * 30;
+      const minCost = totalHours * 0.8 * 22;
+      const maxCost = totalHours * 1.3 * 22;
+      const exactCost = totalHours * 22;
 
       await sendGoogleChatNotification({
         name: formData.name,
@@ -415,7 +335,7 @@ function CalculatorContent() {
       });
 
       try {
-        sessionStorage.setItem("estimatedCost", String(totalHours * 30));
+        sessionStorage.setItem("estimatedCost", String(totalHours * 22));
       } catch {}
 
       setTimeout(() => {

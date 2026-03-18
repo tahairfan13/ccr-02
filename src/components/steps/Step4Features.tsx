@@ -15,7 +15,7 @@ export default function Step4Features({ features, onToggleFeature, isLoading }: 
   const stats = useMemo(() => {
     const selectedFeatures = features.filter((f) => f.selected);
     const totalHours = selectedFeatures.reduce((sum, f) => sum + f.hours, 0);
-    const estimatedCost = totalHours * 30;
+    const estimatedCost = totalHours * 22;
 
     const categories = features.reduce((acc, feature) => {
       const category = feature.category || "Other";
